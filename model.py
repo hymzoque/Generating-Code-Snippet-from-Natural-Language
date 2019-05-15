@@ -78,22 +78,22 @@ class Model:
         input of semantic order tree nods 
         '''
         semantic_units_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, self.input_semantic_units)
-        semantic_em_list = [semantic_units_embedding]
+        semantic_em_stack = tf.expand_dims(semantic_units_embedding, axis=2)
         # loop
         count = tf.constant(0)
-        cond = lambda i, l : tf.less(i, setting.Semantic_Unit_children_num)
+        cond = lambda i, s : tf.less(i, setting.Semantic_Unit_children_num)
         #loop body of semantic embedding processing
-        def __loop_body_embedding_processing(self, i, l):
+        def __loop_body_embedding_processing(i, stack):
             child = self.input_children_of_semantic_units[:, :, i]
             child_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, child)
-            l.append(child_embedding)
+            child_embedding = tf.expand_dims(child_embedding, axis=2)
+            stack = tf.concat([stack, child_embedding], axis=2)
             i = tf.add(i, 1)
-            return i, l
+            return i, stack
         body = __loop_body_embedding_processing
-        tf.while_loop(cond, body, [count, semantic_em_list])
+        tf.while_loop(cond, body, [count, semantic_em_stack], shape_invariants=[count.get_shape(), tf.TensorShape([None, int(semantic_em_stack.shape[1]), None, int(semantic_em_stack.shape[3])])])
         #
-        semantic_unit_stack = tf.stack(semantic_em_list, 2)
-        temp = tf.layers.conv2d(semantic_unit_stack, setting.tree_node_embedding_size, [1, setting.Semantic_Unit_children_num + 1])
+        temp = tf.layers.conv2d(semantic_em_stack, setting.tree_node_embedding_size, [1, setting.Semantic_Unit_children_num + 1])
         temp = tf.reduce_max(temp, axis=2)
         temp = tf.nn.relu(temp) 
         semantic_order_features = self.__deep_CNN(temp, setting.tree_node_embedding_size)
