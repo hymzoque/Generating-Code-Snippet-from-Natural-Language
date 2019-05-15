@@ -123,7 +123,7 @@ class Train:
         dir_path = self.__model_dir
         if (os.path.exists(dir_path + 'checkpoint')):
             saver = tf.train.Saver()
-            saver.restore(tf.train.latest_checkpoint(dir_path))
+            saver.restore(session, tf.train.latest_checkpoint(dir_path))
             print('restoring model')
         else:
             session.run(tf.global_variables_initializer())
