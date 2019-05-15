@@ -91,7 +91,7 @@ class Model:
             i = tf.add(i, 1)
             return i, stack
         body = __loop_body_embedding_processing
-        tf.while_loop(cond, body, [count, semantic_em_stack], shape_invariants=[count.get_shape(), tf.TensorShape([None, int(semantic_em_stack.shape[1]), None, int(semantic_em_stack.shape[3])])])
+        i, semantic_em_stack = tf.while_loop(cond, body, [count, semantic_em_stack], shape_invariants=[count.get_shape(), tf.TensorShape([None, int(semantic_em_stack.shape[1]), None, int(semantic_em_stack.shape[3])])])
         #
         temp = tf.layers.conv2d(semantic_em_stack, setting.tree_node_embedding_size, [1, setting.Semantic_Unit_children_num + 1])
         temp = tf.reduce_max(temp, axis=2)
