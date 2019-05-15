@@ -42,7 +42,7 @@ class Train:
         data_handle = data.Data()
         nn_model = model.Model()
         log = open('train_log', mode='a')
-        log.write(datetime.datetime.now() + '\n')
+        log.write(str(datetime.datetime.now()) + '\n')
         log.write('start training\n')
         log.write('training for ' + str(setting.train_times) + ' times\n')
         with tf.Session(config=self.__gpu_config()) as sess:
@@ -52,12 +52,12 @@ class Train:
             best_accuracy = 0
             for train_loop in range(setting.train_times):
                 start_time = time.time()
-                self.__train_once(sess, data_handle, nn_model, log)
-                valid_accuracy = self.__valid(sess, data_handle, nn_model, log)
+                self.__train_once(sess, data_handle, nn_model)
+                valid_accuracy = self.__valid(sess, data_handle, nn_model)
                 end_time = time.time()
                 
-                log.write('epoch ' + (train_loop + 1) + ' :\n')
-                log.write('accuracy is : ' + valid_accuracy + '\n')
+                log.write('epoch ' + str(train_loop + 1) + ' :\n')
+                log.write('accuracy is : ' + str(valid_accuracy) + '\n')
                 log.write('    time used : ' + str(end_time - start_time) + '\n\n')
                 # save model if accuracy get better
                 if (valid_accuracy > best_accuracy):
@@ -65,7 +65,7 @@ class Train:
                     best_accuracy = valid_accuracy
                 
                 log.flush()
-        log.write(datetime.datetime.now() + '\n')
+        log.write(str(datetime.datetime.now()) + '\n')
         log.write('end training\n\n')
         log.close()        
                 
