@@ -156,17 +156,17 @@ class Model:
     def __deep_CNN(self, tensor, channel_size):
         loop_time = tf.constant(int(setting.cnn_deepth / 2))
         count = tf.constant(0)
-        cond = lambda i, t, c : tf.less(i, loop_time)       
-        def __loop_body_deep_CNN(i, t, channel_size):
+        cond = lambda i, t : tf.less(i, loop_time)       
+        def __loop_body_deep_CNN(i, t):
             temp = tf.layers.conv1d(t, channel_size , setting.deep_CNN_kernel_size, padding='same')
             temp = tf.nn.relu(temp)
             temp = tf.layers.conv1d(temp, channel_size , setting.deep_CNN_kernel_size, padding='same')
             temp = tf.add_n([temp, t])
             temp = tf.nn.relu(temp)
             i = tf.add(i, 1)
-            return i, temp, channel_size
+            return i, temp
         body = __loop_body_deep_CNN
-        count, tensor, c = tf.while_loop(cond, body, [count, tensor, channel_size])
+        count, tensor, c = tf.while_loop(cond, body, [count, tensor])
         return tensor
     
     '''
