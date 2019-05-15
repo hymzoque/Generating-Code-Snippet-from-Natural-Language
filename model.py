@@ -32,7 +32,7 @@ class Model:
         self.input_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.Semantic_Units_len])
         self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.Semantic_Units_len, setting.Semantic_Unit_children_num])
         # indexes of correct output
-        self.correct_output = tf.placeholder(tf.float32, shape=[None, setting.tree_node_embedding_size])
+        self.correct_output = tf.placeholder(tf.float32, shape=[None, setting.tree_node_num])
         # keep_prob = 1 - dropout
         self.keep_prob = tf.placeholder(tf.float32)
     '''
