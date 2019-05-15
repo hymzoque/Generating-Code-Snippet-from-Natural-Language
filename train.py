@@ -79,7 +79,7 @@ class Train:
     def __train_once(self, session, data_handle, model):
         # train
         train_batches = data_handle.get_train_batches()
-        batch_num = len(train_batches[0])
+        batch_num = len(train_batches)
         for count in range(batch_num):
             model.optimize.run(
                     session=session,
@@ -98,7 +98,7 @@ class Train:
     ''' '''
     def __valid(self, session, data_handle, model):
         valid_batches = data_handle.get_valid_batches()
-        batch_num = len(valid_batches[0])
+        batch_num = len(valid_batches)
         
         accuracy = 0
         for count in range(batch_num):
