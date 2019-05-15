@@ -84,7 +84,7 @@ class Data:
         d3 = np.zeros([data_num, setting.Tree_len])
         d4 = np.zeros([data_num, setting.Semantic_Units_len])
         d5 = np.zeros([data_num, setting.Semantic_Units_len, setting.Semantic_Unit_children_num])
-        d6 = np.zeros([data_num, setting.vocabulary_num])
+        d6 = np.zeros([data_num, setting.tree_node_num])
         
         for i in range(data_num):
             data_point = data[i]
