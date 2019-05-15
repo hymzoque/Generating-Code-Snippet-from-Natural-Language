@@ -138,7 +138,7 @@ class Train:
         
         
         
-
+tf.reset_default_graph() # for spyder
 handle = Train()
 #handle.test_train()
 handle.train()
