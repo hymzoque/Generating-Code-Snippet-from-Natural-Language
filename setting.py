@@ -16,9 +16,9 @@ deep_CNN_kernel_size = 2
 keep_prob = 0.8
 hidden_layer_width = 512
 
-train_times = 300
+train_times = 3000
 learning_rate = 1e-4
-weight_decay = 0.3
+weight_decay = 1e-4
 
 train_batch_size = 64
 valid_batch_size = 256
