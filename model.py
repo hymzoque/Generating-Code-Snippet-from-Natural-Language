@@ -30,7 +30,7 @@ class Model:
         self.input_ast_grandparent_nods = tf.placeholder(tf.int32, shape=[None, setting.Tree_len])
         # nodes of predicted semantic units
         self.input_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.Semantic_Units_len])
-        self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.Semantic_Unit_len, setting.Semantic_Unit_children_num])
+        self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.Semantic_Units_len, setting.Semantic_Unit_children_num])
         # indexes of correct output
         self.correct_output = tf.placeholder(tf.float32, shape=[None, setting.tree_node_embedding_size])
         # keep_prob = 1 - dropout
