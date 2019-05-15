@@ -29,11 +29,11 @@ class Train:
             
             self.__train_once(sess, data_handle, nn_model)
             mid = time.time()
-            print('train time used : ' + (mid - start))
+            print('train time used : ' + str(mid - start))
             
             self.__valid(sess, data_handle, nn_model)
             end = time.time()
-            print('valid time used : ' + (end - mid))
+            print('valid time used : ' + str(end - mid))
             
             self.__save_ckpt(sess)
             
@@ -58,7 +58,7 @@ class Train:
                 
                 log.write('epoch ' + (train_loop + 1) + ' :\n')
                 log.write('accuracy is : ' + valid_accuracy + '\n')
-                log.write('    time used : ' + (end_time - start_time) + '\n\n')
+                log.write('    time used : ' + str(end_time - start_time) + '\n\n')
                 # save model if accuracy get better
                 if (valid_accuracy > best_accuracy):
                     self.__save_ckpt(sess)
