@@ -121,7 +121,7 @@ class Train:
     ''' restore or create new checkpoint '''
     def __get_ckpt(self, session):
         dir_path = self.__model_dir
-        if (os.path.exists(dir_path) + 'checkpoint'):
+        if (os.path.exists(dir_path + 'checkpoint')):
             saver = tf.train.Saver()
             saver.restore(tf.train.latest_checkpoint(dir_path))
             print('restoring model')
