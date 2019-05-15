@@ -102,7 +102,7 @@ class Train:
         
         accuracy = 0
         for count in range(batch_num):
-            batch_accuracy, batch_loss = session.run(
+            batch_accuracy = session.run(
                     [model.accuracy],
                     feed_dict={
                             model.input_NL : valid_batches[count][0],
@@ -114,7 +114,7 @@ class Train:
                             model.correct_output : valid_batches[count][6],
                             model.keep_prob : 1.0                           
                             })
-            accuracy += batch_accuracy
+            accuracy += batch_accuracy[0]
         accuracy /= batch_num
         return accuracy
     
