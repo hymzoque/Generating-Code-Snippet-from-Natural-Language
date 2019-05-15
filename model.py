@@ -154,7 +154,7 @@ class Model:
     resnet deep CNN
     '''    
     def __deep_CNN(self, tensor, channel_size):
-        loop_time = tf.constant(setting.cnn_deepth / 2)
+        loop_time = tf.constant(int(setting.cnn_deepth / 2))
         count = tf.constant(0)
         cond = lambda i, t, c : tf.less(i, loop_time)       
         def __loop_body_deep_CNN(i, t, channel_size):
