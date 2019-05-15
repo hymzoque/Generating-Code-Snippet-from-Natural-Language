@@ -166,7 +166,7 @@ class Model:
             i = tf.add(i, 1)
             return i, temp
         body = __loop_body_deep_CNN
-        count, tensor, c = tf.while_loop(cond, body, [count, tensor])
+        count, tensor = tf.while_loop(cond, body, [count, tensor])
         return tensor
     
     '''
