@@ -6,6 +6,7 @@ NL_len = 32 # max 32
 Tree_len = 256 # max 255
 Semantic_Units_len = 32 # max 32
 Semantic_Unit_children_num = 3
+
 use_pre_train = False
 vocabulary_num = 636
 vocabulary_embedding_size = 128
@@ -22,3 +23,6 @@ weight_decay = 1e-4
 
 train_batch_size = 64
 valid_batch_size = 256
+
+max_predict_time = 256
+predict_beam_size = 2
