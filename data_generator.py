@@ -17,10 +17,10 @@ class Generator:
         
         self.__semantic_unit_children_num = 3
         # if a word/tree node has frequency less than min_vocabulary_count
-        # we replace it to 'unknown'
+        # we replace it to 'unknown', generally 'unknown' belongs to string
         self.__min_vocabulary_count = 5
         self.__nl_vocabulary = {'unknwon' : 0}
-        self.__tree_nodes_vocabulary = {'unknwon' : 0}
+        self.__tree_nodes_vocabulary = {'unknwon' : 0, '<END_Node>' : 1}
         
         # statistical data
         self.__nl_max_length = 0
@@ -32,8 +32,8 @@ class Generator:
         
     
         ''' process and generate the train and test data '''
-        train_data_provider = Generator.Data_provider(self.__data_dir + 'conala-train.json')
-        test_data_provider = Generator.Data_provider(self.__data_dir + 'conala-test.json')
+        train_data_provider = Generator.__Data_provider(self.__data_dir + 'conala-train.json')
+        test_data_provider = Generator.__Data_provider(self.__data_dir + 'conala-test.json')
         # register vocabulary
         self.__register_ids_to_vocabulary([train_data_provider, test_data_provider])
         train_data, train_data_for_read = self.__process_each(train_data_provider)
@@ -51,7 +51,7 @@ class Generator:
     
     '''
     '''
-    class Data_provider:
+    class __Data_provider:
         def __init__(self, path):
             with open(path, 'r') as f:
                 data_read = f.read()
@@ -192,10 +192,10 @@ class Generator:
             if (len(node) == 0):
                 self.__appends('<Empty_List>', parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
             else:
-                self.__appends(node.__class__.__name__, parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
+                self.__appends('<List>', parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
                 traceable_node_list.append('{')
                 for child in node:
-                    self.__process_node(child, node.__class__.__name__, parent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
+                    self.__process_node(child, '<List>', parent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
                 traceable_node_list.append('}')
             return
         # as a AST node

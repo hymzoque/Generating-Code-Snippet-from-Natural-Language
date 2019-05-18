@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 
-todo multi channel & attention & cross entropy & adamw
 
 """
 import tensorflow as tf
@@ -131,13 +130,14 @@ class Model:
         # logits
         logits = tf.matmul(temp, w2) + b2
         # softmax output   [batch size, tree node num]
-        self.predict_output = tf.nn.softmax(logits)
-        
+        self.predicted_output = tf.nn.softmax(logits)
+        # log of output, for the precision of probability product
+        self.log_predicted_output = tf.log(self.predicted_output)
         ''' 
         output & optimize
         '''
         # [batch size]
-        predict_result = tf.equal(tf.argmax(self.predict_output, 1), tf.argmax(self.correct_output, 1))
+        predict_result = tf.equal(tf.argmax(self.predicted_output, 1), tf.argmax(self.correct_output, 1))
         self.accuracy = tf.reduce_mean(tf.cast(predict_result, tf.float32))
         # [batch size]
         batch_cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=self.correct_output, logits=logits)
@@ -206,16 +206,4 @@ class Model:
         weight_sum = tf.matmul(features, weight_vector, transpose_a=True)
         weight_sum = tf.reduce_max(weight_sum, axis=2)            
         return weight_sum
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
