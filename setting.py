@@ -26,3 +26,7 @@ valid_batch_size = 256
 
 max_predict_time = 256
 predict_beam_size = 2
+
+HS_PATH = 'data/hearthstone'
+CONALA_PATH = 'data/conala-corpus/'
+dataset_path = CONALA_PATH
