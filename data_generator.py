@@ -8,11 +8,11 @@ import ast
 import re
 import json
 
+import setting
+
 class Generator:
-    HS_PATH = 'data/hearthstone'
-    CONALA_PATH = 'data/conala-corpus/'
     def __init__(self, dataset_path):
-        if (dataset_path != Generator.HS_PATH and dataset_path != Generator.CONALA_PATH): raise Exception('Wrong Path')
+        if (dataset_path != setting.HS_PATH and dataset_path != setting.CONALA_PATH): raise Exception('Wrong Path')
         self.__data_dir = dataset_path
         
         self.__semantic_unit_children_num = 3
@@ -72,7 +72,7 @@ class Generator:
                 # skip the null description
                 if (description == 'null') : continue
                 # delete the ' " ` 
-                description = re.sub('[\'\"`]', '', description).strip()   
+                description = re.sub('[\'\"`]', '', description).strip()
                 description = description.split(' ')
                 ast_root = ast.parse(data_unit['snippet'])
                 yield description, ast_root 
@@ -403,5 +403,5 @@ class Generator:
             
             
 
-#handle = Generator(Generator.HS_PATH)
-handle = Generator(Generator.CONALA_PATH)
+#handle = Generator(setting.HS_PATH)
+handle = Generator(setting.CONALA_PATH)
