@@ -16,11 +16,9 @@ import setting
 
 '''
 class Predict:
-    HS_PATH = 'data/hearthstone/'
-    CONALA_PATH = 'data/conala-corpus/'
     def __init__(self):
         self.__model_dir = 'model/'
-        self.__data_dir = Predict.CONALA_PATH
+        self.__data_dir = setting.CONALA_PATH
         self.__prediction_dir = 'prediction/'
         self.__beam_size = setting.predict_beam_size
         self.__read_vocabulary()
@@ -61,7 +59,7 @@ class Predict:
         beam = [begin_unit]
         
         # stub
-        max_log_probability_result = Predict.__Beam_Unit(None, None, log_probability=-1e10, None)
+        max_log_probability_result = Predict.__Beam_Unit(None, None, -1e10, None)
         
         # predicition
         for i in range(setting.max_predict_time):
@@ -98,20 +96,29 @@ class Predict:
                 appendable_layers = self.__check_appendable_layers(all_parent_layers)
                 
                 # if nothing or only '<List>' as parent in the appendable_layers
-                # can try to append <END_Node> and append the unit to result
+                # try to append possibality of <END_Node>
                 # and try to update max_log_probability_result
-                
-                
-                
-                
+                if (False not in [appendable_layer[0] == '<List>' for appendable_layer in appendable_layers]):
+                    # the 2nd id is the end node
+                    log_probability_of_end_node = unit_log_predicted_output[1]
+                    # if end the log probability is
+                    end_log_probability = beam_unit.log_probability + log_probability_of_end_node
+                    # if better result appears, update the best result
+                    if (end_log_probability > max_log_probability_result.log_probability):
+                        max_log_probability_result = Predict.__Beam_Unit(description, unit_traceable_list[:], end_log_probability, self.__tree_nodes_vocabulary)
                 
                 # add to new beam
+                for appendable_layer in appendable_layers:
+                    # with some grammar check
+                    
+                    
+                    
+                    
+                    # '<data_point>' {} -> traceable list
+                    pass
+                
                 
                 pass
-            # '<data_point>' {} -> traceable list
-            
-            
-            
             
             beam = new_beam
             
@@ -127,12 +134,12 @@ class Predict:
                 beam_unit.generate_data()
             
         ''' generate and write out the code '''
-        # construct the ast
-#        max_log_probability_result
+        # code
+        code = self.__traceable_list_to_code(max_log_probability_result.traceable_list)
+        # write out
+        with open(write_path, 'w') as f:
+            f.write(code)
         
-        return
-
-    
     '''
     batch/beam predict for beam search
     @data_batch
@@ -173,7 +180,7 @@ class Predict:
                 continue
             if (next_node == '}'):
                 continue
-            # 
+            # todo
             
         
         return
@@ -184,7 +191,15 @@ class Predict:
     def __check_appendable_layers(self, all_parent_layers):
         return
     
-
+    
+#    def __ grammar check
+    
+    '''
+    traceable list -> AST -> code  
+    '''
+    def __traceable_list_to_code(self, traceable_list):
+        return
+    
     
     ''' gpu config '''            
     def __gpu_config(self):
@@ -209,18 +224,43 @@ class Predict:
         with open(self.__data_dir + 'tree_nodes_vocabulary', 'r') as f:
             self.__tree_nodes_vocabulary = eval(f.read())
     
-    ''' '''
+    '''
+    process method with same form with Generator.__Data_provider
+    @return descriptions : ids of words numpy forms
+    '''
     def __read_description(self):
-        path = self.__data_dir + 'test_data'
+        # todo multi dataset
+        path = self.__data_dir + 'conala-test.json'
         with open(path, 'r') as f:
+            null = 'null'
             test_data = eval(f.read())
-        # todo
-#        np.zeros
         
-        
-        return # ids of words np forms
+        descriptions = []
+        for data_unit in test_data:
+            description = data_unit['rewritten_intent']
+            if (description == 'null') : continue
+            description = re.sub('[\'\"`]', '', description).strip()
+            description = description.split(' ')
+            description_ids = self.__get_ids_from_nl_vocabulary(description)
+            description_np = np.zeros([setting.NL_len])
+            for i in range(len(description_ids)):
+                description_np[i] = description_ids[i]
+            descriptions.append(description_np)
+        return descriptions
     
-    
+    '''
+    get id from nl vocabulary, if not in vocabulary return 'unknown':0
+    same implement with Generator.__get_ids_from_nl_vocabulary
+    '''
+    def __get_ids_from_nl_vocabulary(self, words):
+        if not (isinstance(words, list)): words = [words]
+        ids = []
+        for word in words:
+            if (word not in self.__nl_vocabulary):
+                ids.append(0)
+            else:
+                ids.append(self.__nl_vocabulary[word])
+        return ids    
     
     '''
     Beam unit receive a traceable nodes list(which is same defined by class Generator)
@@ -303,7 +343,7 @@ class Predict:
             
         '''
         get semantic_unit_list and semantic_unit_children_list by processing traceable_node_list
-        same implement with __process_semantic_unit in class Generator
+        same implement with Generator.__process_semantic_unit
         '''
         def __process_semantic_unit(self, traceable_node_list):
             semantic_unit_list = []
@@ -361,7 +401,7 @@ class Predict:
         
         ''' 
         @return : whether the node is a semantic unit 
-        same implement with __is_semantic_node in class Generator
+        same implement with Generator.__is_semantic_node
         '''
         def __is_semantic_node(self, node):
             return (node == 'ast.Call' or
@@ -372,14 +412,14 @@ class Predict:
                     node == 'ast.If')
         ''' 
         score the child's contribution of semantic information
-        same implement with __semantic_child_score in class Generator
+        same implement with Generator.__semantic_child_score
         '''
         def __semantic_child_score(self, is_data_point, depth):
             reward = 2.5 if is_data_point else 0.0
             return reward - depth
         '''
         get id from tree nodes vocabulary, if not in vocabulary return 'unknown':0
-        same implement with __get_ids_from_tree_nodes_vocabulary in class Generator
+        same implement with Generator.__get_ids_from_tree_nodes_vocabulary
         '''
         def __get_ids_from_tree_nodes_vocabulary(self, nodes):
             if not (isinstance(nodes, list)): nodes = [nodes]
