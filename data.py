@@ -7,10 +7,8 @@ import numpy as np
 import setting
 
 class Data:
-    HS_PATH = 'data/hearthstone'
-    CONALA_PATH = 'data/conala-corpus/'
     def __init__(self):
-        self.__data_dir = Data.CONALA_PATH
+        self.__data_dir = setting.CONALA_PATH
         self.__train_data_process()
         self.__valid_data_process()
     
