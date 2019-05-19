@@ -8,7 +8,6 @@ import os
 import time
 import ast
 import astunparse
-import copy
 
 import model
 import setting
@@ -26,7 +25,7 @@ class Predict:
         self.__beam_size = setting.predict_beam_size
         self.__read_vocabulary()
     
-    ''' test prediction for 1 code file only '''
+    ''' test prediction for 1 sentence only '''
     def test_predict(self):
         nn_model = model.Model()
         with tf.Session(config=self.__gpu_config()) as sess:
@@ -48,8 +47,7 @@ class Predict:
             self.__restore_ckpt(sess)
             
             descriptions = self.__read_description()
-            num = len(descriptions)
-            for n in range(num):
+            for n in range(len(descriptions)):
                 description = descriptions[n]
                 write_path = self.__prediction_dir + str(n)
                 self.__predict_one_sentence(description, write_path, sess, nn_model)
@@ -58,13 +56,14 @@ class Predict:
     ''' predict one sentence '''
     def __predict_one_sentence(self, description, write_path, session, model):
         # initialize the beam
-        begin_unit = Predict.__Beam_Unit(description, traceable_list=['Module', '{'], log_probability=0)
+        begin_unit = Predict.__Beam_Unit(description, traceable_list=['Module', '{'], 0, self.__tree_nodes_vocabulary)
         begin_unit.generate_data()
         beam = [begin_unit]
         
         # stub
-        max_log_probability_result = Predict.__Beam_Unit([], [], log_probability=-1e10)
+        max_log_probability_result = Predict.__Beam_Unit(None, None, log_probability=-1e10, None)
         
+        # predicition
         for i in range(setting.max_predict_time):
             ''' predict ''' 
             data_batch = [
@@ -77,26 +76,44 @@ class Predict:
             # [beam_size(batch_size) x tree_node_num]
             log_predicted_output = self.__predict_one_beam(session, data_batch, model)
             
-            ''' grammar check & generate new beam '''
+            ''' generate new beam '''
             new_beam = []
-            # grammar 表 
             beam_num = len(beam)
             for i in range(beam_num):
                 beam_unit = beam[i]
                 unit_log_predicted_output = log_predicted_output[i]
+                unit_traceable_list = beam_unit.traceable_list
+                
+                # [<probability, id>, ...]
+                unit_log_predicted_output_with_id = [[unit_log_predicted_output[i], i] for i in range(len(unit_log_predicted_output))]
+                unit_log_predicted_output_with_id.sort(key=lambda t : t[0], reverse=True)
+                
+                # trace all direct parent layers <parent, depth(relation depth), position(current children position)>
+                # of next predict node from the traceable list
+                # for traceable list 'p1, {, c1, c2' , parent=p1, depth=1, position=2
+                # for traceable list 'p1, {, p2, {, c1, c2' , return [<p1, 2, 1>, <p2, 1, 2>]    
+                all_parent_layers = self.__trace_all_parent_layers(unit_traceable_list)
+                
+                # reserve all possible layers can append the next predicted node
+                appendable_layers = self.__check_appendable_layers(all_parent_layers)
+                
+                # if nothing or only '<List>' as parent in the appendable_layers
+                # can try to append <END_Node> and append the unit to result
+                # and try to update max_log_probability_result
                 
                 
-                #每个beam_unit都有一个独特的traceable_list
+                
+                
+                
+                # add to new beam
                 
                 pass
+            # '<data_point>' {} -> traceable list
             
-            # 从 traceable node list回溯parent？
+            
             
             
             beam = new_beam
-            ''' try to append <END_Node> and append the unit to result if can, and try to update max_log_probability_result '''
-            
-            
             
             ''' reduce beam max '''
             beam.sort(key=lambda beam_unit:beam_unit.log_probability, reverse=True)
@@ -110,13 +127,14 @@ class Predict:
                 beam_unit.generate_data()
             
         ''' generate and write out the code '''
+        # construct the ast
 #        max_log_probability_result
         
         return
 
     
     '''
-    batch predict for beam search
+    batch/beam predict for beam search
     @data_batch
     @log_predicted_output
     '''
@@ -136,14 +154,37 @@ class Predict:
         
         return log_predicted_output
     
-    def __grammar_check(self):
+    '''
+    trace all direct parent layers <parent, depth(relation depth), position(children position)>
+    of next predict node from the traceable list
+    for traceable list 'p1, {, c1, c2' , parent=p1, depth=1, position=1
+    for traceable list 'p1, {, p2, {, c1, c2' , return [<p1, 2, 0>, <p2, 1, 1>]    
+    '''
+    def __trace_all_parent_layers(self, traceable_list):
+        # for each depth only have 1 parent
+        depth_position = {}
+        current_depth = 1
+        for i in reversed(range(len(traceable_list))):
+            next_node = traceable_list[i]
+            # skip the data point mark
+            if (next_node == '<data_point>'): 
+                continue
+            if (next_node == '{'):
+                continue
+            if (next_node == '}'):
+                continue
+            # 
+            
+        
+        return
+    '''
+    recieve result from __trace_all_parent_layers as input
+    reserve all possible layers can append the next predicted node
+    '''
+    def __check_appendable_layers(self, all_parent_layers):
         return
     
-    def __list_grammar_check(self):
-        return
-#    
-#    def __read_grammar_table(self):
-#        return
+
     
     ''' gpu config '''            
     def __gpu_config(self):
@@ -166,30 +207,35 @@ class Predict:
         with open(self.__data_dir + 'nl_vocabulary', 'r') as f:
             self.__nl_vocabulary = eval(f.read())
         with open(self.__data_dir + 'tree_nodes_vocabulary', 'r') as f:
-            self.__tree_node_vocabulary = eval(f.read())
+            self.__tree_nodes_vocabulary = eval(f.read())
     
     ''' '''
     def __read_description(self):
         path = self.__data_dir + 'test_data'
         with open(path, 'r') as f:
             test_data = eval(f.read())
-            
-#        np.zeros    
+        # todo
+#        np.zeros
+        
         
         return # ids of words np forms
-        
+    
+    
+    
     '''
-    Beam unit receive a traceable nodes list
+    Beam unit receive a traceable nodes list(which is same defined by class Generator)
     and generate data to fit the nn model from the traceable nodes list
     '''
     class __Beam_Unit:
-        def __init__(self, description, traceable_list, log_probability):
+        def __init__(self, description, traceable_list, log_probability, tree_nodes_vocabulary):
             self.description = description # ids
             self.traceable_list = traceable_list
             self.log_probability = log_probability
+            self.__tree_nodes_vocabulary = tree_nodes_vocabulary
+        
         ''' generate data from traceable list '''
         def generate_data(self):
-            #
+            # node_list & parent_list & grandparent_list
             node_list = []
             parent_list = []
             grandparent_list = []
@@ -198,17 +244,45 @@ class Predict:
                 if (node == '{' or node == '}'): continue
                 # for each node
                 node_list.append(node)
-                # find parent and grandparent
+                # find parent and grandparent from traceable list
+                parent_found = False
+                grandparent_found = False
+                depth = 0
                 for j in reversed(range(i)):
-                    pass
-                
-                
+                    next_node = self.traceable_list[j]
+                    if (next_node == '{'):
+                        depth += 1
+                        continue
+                    if (next_node == '}'):
+                        depth -= 1
+                        continue
+                    if (next_node == '<data_point>'):
+                        continue
+                    if ((not parent_found) and depth == 1):
+                        parent_list.append(next_node)
+                        parent_found = True
+                        continue
+                    if ((not grandparent_found) and depth == 2):
+                        grandparent_list.append(next_node)
+                        grandparent_found = True
+                        break
+                if not (parent_found): parent_list.append('<Empty_Node>')
+                if not (grandparent_found): grandparent_list.append('<Empty_Node>')
             
-            #
+            # semantic_units & semantic_unit_children
             semantic_units, semantic_unit_children = self.__process_semantic_unit(self.traceable_list)
-            # get ids
             
-            ''' fill 0 in spare place '''
+            # get ids
+            node_list = self.__get_ids_from_tree_nodes_vocabulary(node_list)
+            parent_list = self.__get_ids_from_tree_nodes_vocabulary(parent_list)
+            grandparent_list = self.__get_ids_from_tree_nodes_vocabulary(grandparent_list)
+            semantic_units = self.__get_ids_from_tree_nodes_vocabulary(semantic_units)
+            semantic_unit_children_ids = []
+            for children in semantic_unit_children:
+                semantic_unit_children_ids.append(self.__get_ids_from_tree_nodes_vocabulary(children))
+            semantic_unit_children = semantic_unit_children_ids
+            
+            # fill 0 in spare place(using numpy)
             self.node_list = np.zeros([setting.Tree_len])
             self.parent_list = np.zeros([setting.Tree_len])
             self.grandparent_list = np.zeros([setting.Tree_len])
@@ -290,12 +364,12 @@ class Predict:
         same implement with __is_semantic_node in class Generator
         '''
         def __is_semantic_node(self, node):
-            return (node == 'Call' or
-                    node == 'Attribute' or
-                    node == 'Assign' or
-                    node == 'AugAssign' or
-                    node == 'While' or
-                    node == 'If')
+            return (node == 'ast.Call' or
+                    node == 'ast.Attribute' or
+                    node == 'ast.Assign' or
+                    node == 'ast.AugAssign' or
+                    node == 'ast.While' or
+                    node == 'ast.If')
         ''' 
         score the child's contribution of semantic information
         same implement with __semantic_child_score in class Generator
@@ -303,7 +377,19 @@ class Predict:
         def __semantic_child_score(self, is_data_point, depth):
             reward = 2.5 if is_data_point else 0.0
             return reward - depth
-
+        '''
+        get id from tree nodes vocabulary, if not in vocabulary return 'unknown':0
+        same implement with __get_ids_from_tree_nodes_vocabulary in class Generator
+        '''
+        def __get_ids_from_tree_nodes_vocabulary(self, nodes):
+            if not (isinstance(nodes, list)): nodes = [nodes]
+            ids = []
+            for node in nodes:
+                if (node not in self.__tree_nodes_vocabulary):
+                    ids.append(0)
+                else:
+                    ids.append(self.__tree_nodes_vocabulary[node])
+            return ids
 
 
 handle = Predict()

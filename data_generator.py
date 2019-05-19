@@ -200,10 +200,11 @@ class Generator:
             return
         # as a AST node
         if (isinstance(node, ast.AST)):
-            self.__appends(node.__class__.__name__, parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
+            name = 'ast.' + node.__class__.__name__
+            self.__appends(name, parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
             traceable_node_list.append('{')
             for child_name, child_field in ast.iter_fields(node):
-                self.__process_node(child_field, node.__class__.__name__, parent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
+                self.__process_node(child_field, name, parent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
             traceable_node_list.append('}')
             return
         
@@ -278,12 +279,12 @@ class Generator:
     
     ''' @return : whether the node is a semantic unit '''
     def __is_semantic_node(self, node):
-        return (node == 'Call' or
-                node == 'Attribute' or
-                node == 'Assign' or
-                node == 'AugAssign' or
-                node == 'While' or
-                node == 'If')
+        return (node == 'ast.Call' or
+                node == 'ast.Attribute' or
+                node == 'ast.Assign' or
+                node == 'ast.AugAssign' or
+                node == 'ast.While' or
+                node == 'ast.If')
     ''' 
     score the child's contribution of semantic information
     '''

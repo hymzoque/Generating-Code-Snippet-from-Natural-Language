@@ -10,14 +10,14 @@ Semantic_Unit_children_num = 3
 use_pre_train = False
 vocabulary_num = 636
 vocabulary_embedding_size = 128
-tree_node_num = 465
+tree_node_num = 468
 tree_node_embedding_size = 128
-cnn_deepth = 12
+cnn_deepth = 20
 deep_CNN_kernel_size = 2
-keep_prob = 0.8
-hidden_layer_width = 512
+keep_prob = 0.5
+hidden_layer_width = 768
 
-train_times = 3000
+train_times = 2000
 learning_rate = 1e-4
 weight_decay = 1e-4
 
