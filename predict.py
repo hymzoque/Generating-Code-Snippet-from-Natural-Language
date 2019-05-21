@@ -267,11 +267,13 @@ class Predict:
         # <List> can not have child <List>
         if (parent == '<List>' and child == '<List>'):
             return False
+        # <List> can not have string as child(not strict)
+        
+        # Name and Str must have string as first child(not strict)
+        
         # ClassDef or FunctionDef must have string as first child(name)
-        # and the string can not have first char as number
         if ((parent == 'ast.ClassDef' or parent == 'ast.FunctionDef') and position == -1):
-            if ((child == '<List>' or child == '<Empty_List>' or child == '<Empty_Node>' or 'ast.' in child)
-                or (child[0] >= '0' and child[0] <= '9')):
+            if (child == '<List>' or child == '<Empty_List>' or child == '<Empty_Node>' or 'ast.' in child):
                 return False
         return True
                
@@ -280,15 +282,77 @@ class Predict:
     traceable list -> AST -> code
     '''
     def __traceable_list_to_code(self, traceable_list):
-        # stack        
-        # to ast
+        # delete '}' in the tail of list
+        for i in reversed(range(len(traceable_list))):
+            if (traceable_list[i] == '}'):
+                continue
+            else:
+                break
+        traceable_list = traceable_list[:i+1]
         
-        # todo
-        
-        
-        
-        
-        return
+        # each stack is a child list
+        stacks = [[]]
+        for i in reversed(range(len(traceable_list))):
+            next_node = traceable_list[i]
+            if (next_node == '<data_point>'): # skip
+                continue
+            elif (next_node == '}'): # create a new stack(child list)
+                stacks.append([])
+                continue
+            elif (next_node == '<Empty_List>'): # append a [] as a child
+                stacks[len(stacks) - 1].append([])
+                continue
+            elif (next_node == '<None_Node>'): # append a None as a child
+                stacks[len(stacks) - 1].append(None)
+                continue
+            elif (next_node == '<List>'): # create a list use the top stack, and append the list as a child
+                l = stacks.pop()
+                l.reverse()
+                if (len(stacks) == 0):
+                    stacks.append([l])
+                else:
+                    stacks[len(stacks) - 1].append(l)
+                continue
+            elif ('ast.' in next_node): # ast node
+                child_list = stacks.pop()
+                # eval('ast.XXX(..., child_list[1], child_list[0])')
+                new_instance = next_node + '('
+                for i in reversed(range(len(child_list))):
+                    new_instance += 'child_list[' + str(i) + ']'
+                    if (i != 0):
+                        new_instance += ', '
+                new_instance += ')'
+                new_node = eval(new_instance)
+                if (len(stacks) == 0):
+                    stacks.append([new_node])
+                else:
+                    stacks[len(stacks) - 1].append(new_node)
+                continue
+            elif (next_node == '{'): # skip, '{' must followed by a <List> or a ast node
+                continue
+            else: # data
+                # data type
+                # bool
+                if (next_node == 'True'): 
+                    next_node == True
+                elif (next_node == 'False'): 
+                    next_node == False
+                else:
+                    # int
+                    try:
+                        next_node = int(next_node)
+                    except:
+                        # float
+                        try:
+                            next_node = float(next_node)
+                        # str
+                        except:
+                            next_node = str(next_node)
+                stacks[len(stacks) - 1].append(next_node)
+                continue
+        root = stacks[0][0]
+        code = astunparse.unparse(root)
+        return code
     
     
     ''' gpu config '''            
