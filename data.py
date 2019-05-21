@@ -76,12 +76,12 @@ class Data:
     '''
     def __data_process(self, data):
         data_num = len(data)
-        d0 = np.zeros([data_num, setting.NL_len])
-        d1 = np.zeros([data_num, setting.Tree_len])
-        d2 = np.zeros([data_num, setting.Tree_len])
-        d3 = np.zeros([data_num, setting.Tree_len])
-        d4 = np.zeros([data_num, setting.Semantic_Units_len])
-        d5 = np.zeros([data_num, setting.Semantic_Units_len, setting.Semantic_Unit_children_num])
+        d0 = np.zeros([data_num, setting.nl_len])
+        d1 = np.zeros([data_num, setting.tree_len])
+        d2 = np.zeros([data_num, setting.tree_len])
+        d3 = np.zeros([data_num, setting.tree_len])
+        d4 = np.zeros([data_num, setting.semantic_units_len])
+        d5 = np.zeros([data_num, setting.semantic_units_len, setting.semantic_unit_children_num])
         d6 = np.zeros([data_num, setting.tree_node_num])
         
         for i in range(data_num):
