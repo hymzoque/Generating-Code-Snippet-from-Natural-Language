@@ -6,14 +6,9 @@
 import tensorflow as tf
 import setting as setting
 
-'''
-    
-'''
 class Model:
-    
     def __init__(self):
         self.__place_alloc()
-        self.__embedding()
         self.__bulid_graph()    
     
     '''
@@ -22,30 +17,26 @@ class Model:
     def __place_alloc(self):
         # None=batch_size
         # descriptions 
-        self.input_NL = tf.placeholder(tf.int32, shape=[None, setting.NL_len])
+        self.input_NL = tf.placeholder(tf.int32, shape=[None, setting.nl_len])
         # nodes of predicted ast
-        self.input_ast_nodes = tf.placeholder(tf.int32, shape=[None, setting.Tree_len])
-        self.input_ast_parent_nodes = tf.placeholder(tf.int32, shape=[None, setting.Tree_len])
-        self.input_ast_grandparent_nods = tf.placeholder(tf.int32, shape=[None, setting.Tree_len])
+        self.input_ast_nodes = tf.placeholder(tf.int32, shape=[None, setting.tree_len])
+        self.input_ast_parent_nodes = tf.placeholder(tf.int32, shape=[None, setting.tree_len])
+        self.input_ast_grandparent_nodes = tf.placeholder(tf.int32, shape=[None, setting.tree_len])
         # nodes of predicted semantic units
-        self.input_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.Semantic_Units_len])
-        self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.Semantic_Units_len, setting.Semantic_Unit_children_num])
+        self.input_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.semantic_units_len])
+        self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, setting.semantic_units_len, setting.semantic_unit_children_num])
         # indexes of correct output
         self.correct_output = tf.placeholder(tf.float32, shape=[None, setting.tree_node_num])
         # keep_prob = 1 - dropout
         self.keep_prob = tf.placeholder(tf.float32)
-    '''
-    
-    '''   
-    def __embedding(self):
+        
         self.vocabulary_embedding = tf.get_variable('vocabulary_embedding', shape=[setting.vocabulary_num, setting.vocabulary_embedding_size], initializer=self.__initializer())
         self.tree_node_embedding = tf.get_variable('tree_node_embedding', shape=[setting.tree_node_num, setting.tree_node_embedding_size], initializer=self.__initializer())
-#        if (use_pre_train):
-#            # todo
-#            self.vocabulary_embedding_pre_trained
-#            self.tree_node_embedding_pre_trained
-        # tf if
         
+        # pre train layer
+        if (setting.use_pre_train):
+            self.pre_train_tree_node_embedding = tf.placeholder(tf.float32, shape=[setting.tree_node_num, setting.tree_node_embedding_size])
+
     '''
     
     '''
@@ -62,7 +53,7 @@ class Model:
         # [batch size, tree length, embedding size]
         ast_nodes_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, self.input_ast_nodes)
         ast_parent_nodes_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, self.input_ast_parent_nodes)
-        ast_grandparent_nodes_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, self.input_ast_grandparent_nods)
+        ast_grandparent_nodes_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, self.input_ast_grandparent_nodes)
         # [batch size, tree length, 3, embedding size]  (batch, height, width, channels) -- 'channel last'
         parent_stack = tf.stack([ast_nodes_embedding, ast_parent_nodes_embedding, ast_grandparent_nodes_embedding], 2)
         # [batch size, tree length, 1, embedding size]
@@ -70,6 +61,8 @@ class Model:
         # [batch size, tree length, embedding size]
         temp = tf.reduce_max(temp, axis=2)
         temp = tf.nn.relu(temp)
+        # todo multi channel
+        
         # [batch size, tree length, embedding size]
         tree_parent_features = self.__deep_CNN(temp, setting.tree_node_embedding_size)
         
@@ -79,22 +72,33 @@ class Model:
         semantic_units_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, self.input_semantic_units)
         semantic_em_stack = tf.expand_dims(semantic_units_embedding, axis=2)
         # loop
-        count = tf.constant(0)
-        cond = lambda i, s : tf.less(i, setting.Semantic_Unit_children_num)
-        #loop body of semantic embedding processing
-        def __loop_body_embedding_processing(i, stack):
+        for i in range(setting.semantic_unit_children_num):
             child = self.input_children_of_semantic_units[:, :, i]
             child_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, child)
             child_embedding = tf.expand_dims(child_embedding, axis=2)
-            stack = tf.concat([stack, child_embedding], axis=2)
-            i = tf.add(i, 1)
-            return i, stack
-        body = __loop_body_embedding_processing
-        i, semantic_em_stack = tf.while_loop(cond, body, [count, semantic_em_stack], shape_invariants=[count.get_shape(), tf.TensorShape([None, int(semantic_em_stack.shape[1]), None, int(semantic_em_stack.shape[3])])])
+            semantic_em_stack = tf.concat([semantic_em_stack, child_embedding], axis=2)            
+        
+        
+#        count = tf.constant(0)
+#        cond = lambda i, s : tf.less(i, setting.semantic_unit_children_num)
+#        #loop body of semantic embedding processing
+#        def __loop_body_embedding_processing(i, stack):
+#            child = self.input_children_of_semantic_units[:, :, i]
+#            child_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, child)
+#            child_embedding = tf.expand_dims(child_embedding, axis=2)
+#            stack = tf.concat([stack, child_embedding], axis=2)
+#            i = tf.add(i, 1)
+#            return i, stack
+#        body = __loop_body_embedding_processing
+#        i, semantic_em_stack = tf.while_loop(cond, body, [count, semantic_em_stack], shape_invariants=[count.get_shape(), tf.TensorShape([None, int(semantic_em_stack.shape[1]), None, int(semantic_em_stack.shape[3])])])
         #
-        temp = tf.layers.conv2d(semantic_em_stack, setting.tree_node_embedding_size, [1, setting.Semantic_Unit_children_num + 1])
+        temp = tf.layers.conv2d(semantic_em_stack, setting.tree_node_embedding_size, [1, setting.semantic_unit_children_num + 1])
         temp = tf.reduce_max(temp, axis=2)
         temp = tf.nn.relu(temp) 
+        
+        # todo multi channel
+        
+        
         semantic_order_features = self.__deep_CNN(temp, setting.tree_node_embedding_size)
         
         '''
@@ -132,7 +136,7 @@ class Model:
         # softmax output   [batch size, tree node num]
         self.predicted_output = tf.nn.softmax(logits)
         # log of output, for the precision of probability product
-        self.log_predicted_output = tf.log(self.predicted_output)
+        self.log_predicted_output = tf.log(tf.clip_by_value(self.predicted_output, 1e-100, 1.0))
         ''' 
         output & optimize
         '''
@@ -155,19 +159,28 @@ class Model:
     '''    
     def __deep_CNN(self, tensor, channel_size):
         loop_time = tf.constant(int(setting.cnn_deepth / 2))
-        count = tf.constant(0)
-        cond = lambda i, t : tf.less(i, loop_time)       
-        def __loop_body_deep_CNN(i, t):
-            temp = tf.layers.conv1d(t, channel_size , setting.deep_CNN_kernel_size, padding='same')
+        
+        for i in range(loop_time):
+            temp = tf.layers.conv1d(tensor, channel_size , setting.deep_CNN_kernel_size, padding='same')
             temp = tf.nn.relu(temp)
             temp = tf.layers.conv1d(temp, channel_size , setting.deep_CNN_kernel_size, padding='same')
-            temp = tf.add_n([temp, t])
-            temp = tf.nn.relu(temp)
-            i = tf.add(i, 1)
-            return i, temp
-        body = __loop_body_deep_CNN
-        count, tensor = tf.while_loop(cond, body, [count, tensor])
+            temp = tf.add_n([temp, tensor])
+            tensor = tf.nn.relu(temp)            
         return tensor
+        
+#        count = tf.constant(0)
+#        cond = lambda i, t : tf.less(i, loop_time)       
+#        def __loop_body_deep_CNN(i, t):
+#            temp = tf.layers.conv1d(t, channel_size , setting.deep_CNN_kernel_size, padding='same')
+#            temp = tf.nn.relu(temp)
+#            temp = tf.layers.conv1d(temp, channel_size , setting.deep_CNN_kernel_size, padding='same')
+#            temp = tf.add_n([temp, t])
+#            temp = tf.nn.relu(temp)
+#            i = tf.add(i, 1)
+#            return i, temp
+#        body = __loop_body_deep_CNN
+#        count, tensor = tf.while_loop(cond, body, [count, tensor])
+#        return tensor
     
     '''
     @tensor : [batch_size, tree/nl_length(height), tree/nl_embedding_size(width)]
