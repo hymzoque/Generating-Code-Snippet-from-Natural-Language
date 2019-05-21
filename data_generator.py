@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-generate train & valid/test data
+generate train and valid/test data
 
 """
 
@@ -15,12 +15,11 @@ class Generator:
         if (dataset_path != setting.HS_PATH and dataset_path != setting.CONALA_PATH): raise Exception('Wrong Path')
         self.__data_dir = dataset_path
         
-        self.__semantic_unit_children_num = 3
         # if a word/tree node has frequency less than min_vocabulary_count
         # we replace it to 'unknown', generally 'unknown' belongs to string
-        self.__min_vocabulary_count = 5
+        self.__min_vocabulary_count = setting.min_vocabulary_count
         self.__nl_vocabulary = {'unknwon' : 0}
-        self.__tree_nodes_vocabulary = {'unknwon' : 0, '<END_Node>' : 1}
+        self.__tree_nodes_vocabulary = {'unknwon' : 0, '<END_Node>' : 1, '<Empty_Node>' : 2}
         
         # statistical data
         self.__nl_max_length = 0
@@ -143,7 +142,7 @@ class Generator:
                         temp = traceable_node_list.pop()
                 
                 # process the semantic unit
-                semantic_unit_list, semantic_unit_children_list = self.__process_semantic_unit(traceable_node_list)   
+                semantic_unit_list, semantic_unit_children_list = Generator.process_semantic_unit(traceable_node_list)   
                 
                 if (len(semantic_unit_list) > self.__semantic_unit_max_num): self.__semantic_unit_max_num = len(semantic_unit_list)
                 
@@ -209,7 +208,7 @@ class Generator:
             return
         
         if (node == None):
-            self.__appends('<Empty_Node>', parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
+            self.__appends('<None_Node>', parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
             return
         
         print('error: type ' + str(type(node)))
@@ -222,14 +221,16 @@ class Generator:
         l3.append(v3)    
     
     '''
+    get semantic_unit_list and semantic_unit_children_list by processing traceable_node_list
     '''
-    def __process_semantic_unit(self, traceable_node_list):
+    @staticmethod
+    def process_semantic_unit(traceable_node_list):
         semantic_unit_list = []
         semantic_unit_children_list = []      
         for count in range(len(traceable_node_list)):
             # reach a semantic unit
             node = traceable_node_list[count]
-            if not (self.__is_semantic_node(node)):
+            if not (Generator.__is_semantic_node(node)):
                 continue
             
             semantic_unit_list.append(node)
@@ -253,19 +254,19 @@ class Generator:
                 elif (next_node == '<data_point>'):
                     is_data_point = True
                 else:
-                    children_with_score.append([next_node, self.__semantic_child_score(is_data_point, depth)])
+                    children_with_score.append([next_node, Generator.__semantic_child_score(is_data_point, depth)])
                     is_data_point = False
                 sub_count += 1    
             # reduce children by k max, and we need to keep the order of node data
             children = []
-            if (len(children_with_score) <= self.__semantic_unit_children_num):
+            if (len(children_with_score) <= setting.semantic_unit_children_num):
                 for c in children_with_score:
                     children.append(c[0])
             else:
                 children_with_score_copy = children_with_score[:]
                 children_with_score_copy.sort(key=lambda a: a[1])
-                k_max_score = children_with_score_copy[self.__semantic_unit_children_num - 1][1]
-                children_num = self.__semantic_unit_children_num
+                k_max_score = children_with_score_copy[setting.semantic_unit_children_num - 1][1]
+                children_num = setting.semantic_unit_children_num
                 for c in children_with_score:
                     if (c[1] >= k_max_score):
                         children.append(c[0])
@@ -278,7 +279,8 @@ class Generator:
         return semantic_unit_list, semantic_unit_children_list
     
     ''' @return : whether the node is a semantic unit '''
-    def __is_semantic_node(self, node):
+    @staticmethod
+    def __is_semantic_node(node):
         return (node == 'ast.Call' or
                 node == 'ast.Attribute' or
                 node == 'ast.Assign' or
@@ -288,7 +290,8 @@ class Generator:
     ''' 
     score the child's contribution of semantic information
     '''
-    def __semantic_child_score(self, is_data_point, depth):
+    @staticmethod
+    def __semantic_child_score(is_data_point, depth):
         reward = 2.5 if is_data_point else 0.0
         return reward - depth
     
@@ -323,31 +326,38 @@ class Generator:
         for node, count in tree_nodes_vocabulary_with_count.items():
             if (count >= self.__min_vocabulary_count): self.__tree_nodes_vocabulary[node] = len(self.__tree_nodes_vocabulary)
     
+
+    def __get_ids_from_nl_vocabulary(self, words):
+        return Generator.get_ids_from_nl_vocabulary(words, self.__nl_vocabulary)
     '''
     get id from nl vocabulary, if not in vocabulary return 'unknown':0
     '''
-    def __get_ids_from_nl_vocabulary(self, words):
+    @staticmethod
+    def get_ids_from_nl_vocabulary(words, nl_vocabulary):
         if not (isinstance(words, list)): words = [words]
         ids = []
         for word in words:
-            if (word not in self.__nl_vocabulary):
+            if (word not in nl_vocabulary):
                 ids.append(0)
             else:
-                ids.append(self.__nl_vocabulary[word])
-        return ids
+                ids.append(nl_vocabulary[word])
+        return ids    
+    def __get_ids_from_tree_nodes_vocabulary(self, nodes):
+        return Generator.get_ids_from_tree_nodes_vocabulary(nodes, self.__tree_nodes_vocabulary)
     '''
     get id from tree nodes vocabulary, if not in vocabulary return 'unknown':0
-    '''
-    def __get_ids_from_tree_nodes_vocabulary(self, nodes):
+    '''    
+    @staticmethod
+    def get_ids_from_tree_nodes_vocabulary(nodes, tree_nodes_vocabulary):
         if not (isinstance(nodes, list)): nodes = [nodes]
         ids = []
         for node in nodes:
-            if (node not in self.__tree_nodes_vocabulary):
+            if (node not in tree_nodes_vocabulary):
                 ids.append(0)
             else:
-                ids.append(self.__tree_nodes_vocabulary[node])
+                ids.append(tree_nodes_vocabulary[node])
         return ids
-
+    
 
        
     def __write_nl_vocabulary(self):
