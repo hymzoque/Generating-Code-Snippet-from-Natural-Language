@@ -334,9 +334,9 @@ class Predict:
                 # data type
                 # bool
                 if (next_node == 'True'): 
-                    next_node == True
+                    next_node = True
                 elif (next_node == 'False'): 
-                    next_node == False
+                    next_node = False
                 else:
                     # int
                     try:
