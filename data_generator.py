@@ -7,17 +7,18 @@ generate train and valid/test data
 import ast
 import re
 import json
+import os
 
-import setting
+from setting import Path
 
 class Generator:
-    def __init__(self, dataset_path):
-        if (dataset_path != setting.HS_PATH and dataset_path != setting.CONALA_PATH): raise Exception('Wrong Path')
-        self.__data_dir = dataset_path
+    def __init__(self, paras):
+        self.__paras = paras
+        self.__data_dir = self.__paras.dataset_path
         
         # if a word/tree node has frequency less than min_vocabulary_count
         # we replace it to 'unknown', generally 'unknown' belongs to string
-        self.__min_vocabulary_count = setting.min_vocabulary_count
+        self.__min_vocabulary_count = self.__paras.min_vocabulary_count
         self.__nl_vocabulary = {'unknwon' : 0}
         self.__tree_nodes_vocabulary = {'unknwon' : 0, '<END_Node>' : 1, '<Empty_Node>' : 2}
         
@@ -38,12 +39,14 @@ class Generator:
         train_data, train_data_for_read = self.__process_each(train_data_provider)
         test_data, test_data_for_read = self.__process_each(test_data_provider)
         
+        if not os.path.exists(self.__data_dir + Path.GENERATED_PATH):
+            os.mkdir(self.__data_dir + Path.GENERATED_PATH)
         self.__write_nl_vocabulary()
         self.__write_tree_nodes_vocabulary()
-        self.__write_data(train_data, self.__data_dir + 'train_data')
-        self.__write_data(train_data_for_read, self.__data_dir + 'train_data_for_read')
-        self.__write_data(test_data, self.__data_dir + 'test_data')
-        self.__write_data(test_data_for_read, self.__data_dir + 'test_data_for_read')
+        self.__write_data(train_data, self.__data_dir + Path.TRAIN_DATA_PATH)
+        self.__write_data(train_data_for_read, self.__data_dir + Path.TRAIN_DATA_PATH + '_for_read')
+        self.__write_data(test_data, self.__data_dir + Path.TEST_DATA_PATH)
+        self.__write_data(test_data_for_read, self.__data_dir + Path.TEST_DATA_PATH + '_for_read')
         
         self.__write_statistical_data()
         
@@ -64,7 +67,6 @@ class Generator:
             '''
             self.data_iter = self.__data_iter_conala
         
-#        def __ini_conala
         def __data_iter_conala(self):
             for data_unit in self.__data_read:
                 description = data_unit['rewritten_intent']
@@ -75,6 +77,10 @@ class Generator:
                 description = description.split(' ')
                 ast_root = ast.parse(data_unit['snippet'])
                 yield description, ast_root 
+        def __data_iter_hs(self):
+#            for 
+            return
+        
         
     ''' 
     process train or test data 
@@ -142,7 +148,7 @@ class Generator:
                         temp = traceable_node_list.pop()
                 
                 # process the semantic unit
-                semantic_unit_list, semantic_unit_children_list = Generator.process_semantic_unit(traceable_node_list)   
+                semantic_unit_list, semantic_unit_children_list = Generator.process_semantic_unit(traceable_node_list, self.__paras)   
                 
                 if (len(semantic_unit_list) > self.__semantic_unit_max_num): self.__semantic_unit_max_num = len(semantic_unit_list)
                 
@@ -224,7 +230,7 @@ class Generator:
     get semantic_unit_list and semantic_unit_children_list by processing traceable_node_list
     '''
     @staticmethod
-    def process_semantic_unit(traceable_node_list):
+    def process_semantic_unit(traceable_node_list, paras):
         semantic_unit_list = []
         semantic_unit_children_list = []      
         for count in range(len(traceable_node_list)):
@@ -259,14 +265,14 @@ class Generator:
                 sub_count += 1    
             # reduce children by k max, and we need to keep the order of node data
             children = []
-            if (len(children_with_score) <= setting.semantic_unit_children_num):
+            if (len(children_with_score) <= paras.semantic_unit_children_num):
                 for c in children_with_score:
                     children.append(c[0])
             else:
                 children_with_score_copy = children_with_score[:]
                 children_with_score_copy.sort(key=lambda a: a[1])
-                k_max_score = children_with_score_copy[setting.semantic_unit_children_num - 1][1]
-                children_num = setting.semantic_unit_children_num
+                k_max_score = children_with_score_copy[paras.semantic_unit_children_num - 1][1]
+                children_num = paras.semantic_unit_children_num
                 for c in children_with_score:
                     if (c[1] >= k_max_score):
                         children.append(c[0])
@@ -311,6 +317,7 @@ class Generator:
                         nl_vocabulary_with_count[word] = 1
                     else:
                         nl_vocabulary_with_count[word] += 1
+                        
                 ''' ast '''
                 nodes = []
                 self.__process_node(ast_root, '', '', nodes, [], [], [])
@@ -361,12 +368,12 @@ class Generator:
 
        
     def __write_nl_vocabulary(self):
-        path = self.__data_dir + 'nl_vocabulary'
+        path = self.__data_dir + Path.NL_VOCABULARY_PATH
         with open(path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(self.__nl_vocabulary, indent=1))
         
     def __write_tree_nodes_vocabulary(self):
-        path = self.__data_dir + 'tree_nodes_vocabulary'
+        path = self.__data_dir + Path.TREE_NODES_VOCABULARY_PATH
         with open(path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(self.__tree_nodes_vocabulary, indent=1))
 
@@ -402,7 +409,7 @@ class Generator:
     
     '''  '''
     def __write_statistical_data(self):
-        with open(self.__data_dir + 'statistics', 'w', encoding='utf-8') as f:
+        with open(self.__data_dir + Path.STATISTICS_PATH, 'w', encoding='utf-8') as f:
             f.write('nl vocabulary size: ' + str(len(self.__nl_vocabulary)) + '\n')
             f.write('tree nodes vocabulary size: ' + str(len(self.__tree_nodes_vocabulary)) + '\n')
             f.write('nl average length: ' + str(self.__nl_length_sum / self.__data_num) + '\n')
@@ -412,6 +419,7 @@ class Generator:
             f.write('semantic unit max num: ' + str(self.__semantic_unit_max_num) + '\n')
             
             
-
-#handle = Generator(setting.HS_PATH)
-handle = Generator(setting.CONALA_PATH)
+if (__name__ == '__main__'):
+    from setting import Parameters
+    handle = Generator(Parameters.get_hs_paras())
+    handle = Generator(Parameters.get_conala_paras())

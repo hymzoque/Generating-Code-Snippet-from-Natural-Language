@@ -4,11 +4,12 @@
 """
 import numpy as np
 
-import setting
+from self.__paras import Path
 
 class Data:
-    def __init__(self):
-        self.__data_dir = setting.CONALA_PATH
+    def __init__(self, paras):
+        self.__paras = paras
+        self.__data_dir = paras.dataset_path
         self.__train_data_process()
         self.__valid_data_process()
     
@@ -29,7 +30,7 @@ class Data:
     
     '''
     def __train_data_process(self):
-        path = self.__data_dir + 'train_data'
+        path = self.__data_dir + Path.TRAIN_DATA_PATH
         with open(path, 'r') as f:
             train_data = eval(f.read())
         self.__train_data = self.__data_process(train_data)
@@ -38,7 +39,7 @@ class Data:
     data form same with __train_data_process
     '''
     def __valid_data_process(self):
-        path = self.__data_dir + 'test_data'
+        path = self.__data_dir + Path.TEST_DATA_PATH
         with open(path, 'r') as f:
             test_data = eval(f.read())       
         valid_data = self.__data_process(test_data)    
@@ -52,7 +53,7 @@ class Data:
         d6 = valid_data[6]        
         
         data_num = int(d0.shape[0])
-        batch_size = setting.valid_batch_size
+        batch_size = self.__paras.valid_batch_size
         batch_num = int(data_num / batch_size)
         
         valid_batches = []    
@@ -76,13 +77,13 @@ class Data:
     '''
     def __data_process(self, data):
         data_num = len(data)
-        d0 = np.zeros([data_num, setting.nl_len])
-        d1 = np.zeros([data_num, setting.tree_len])
-        d2 = np.zeros([data_num, setting.tree_len])
-        d3 = np.zeros([data_num, setting.tree_len])
-        d4 = np.zeros([data_num, setting.semantic_units_len])
-        d5 = np.zeros([data_num, setting.semantic_units_len, setting.semantic_unit_children_num])
-        d6 = np.zeros([data_num, setting.tree_node_num])
+        d0 = np.zeros([data_num, self.__paras.nl_len])
+        d1 = np.zeros([data_num, self.__paras.tree_len])
+        d2 = np.zeros([data_num, self.__paras.tree_len])
+        d3 = np.zeros([data_num, self.__paras.tree_len])
+        d4 = np.zeros([data_num, self.__paras.semantic_units_len])
+        d5 = np.zeros([data_num, self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])
+        d6 = np.zeros([data_num, self.__paras.tree_node_num])
         
         for i in range(data_num):
             data_point = data[i]
@@ -150,7 +151,7 @@ class Data:
         d5_shuffle = d5[shuffle]
         d6_shuffle = d6[shuffle]
         
-        batch_size = setting.train_batch_size
+        batch_size = self.__paras.train_batch_size
         batch_num = int(data_num / batch_size)
         
         train_batches = []

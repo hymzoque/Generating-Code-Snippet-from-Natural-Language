@@ -10,17 +10,18 @@ import os
 
 import data
 import model
-import setting
+from setting import Path
 
 class Train:
-    def __init__(self):
-        self.__model_dir = 'model/'
+    def __init__(self, paras):
+        self.__paras = paras
+        self.__model_dir = Path.MODEL_PATH
     
     
-    ''' test the training&valid time of one batch '''
+    ''' test the training and valid time of one batch '''
     def test_train(self):
-        data_handle = data.Data()
-        nn_model = model.Model()
+        data_handle = data.Data(self.__paras)
+        nn_model = model.Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
             
             self.__get_ckpt(sess)
@@ -39,18 +40,18 @@ class Train:
             
     ''' train method '''
     def train(self):
-        data_handle = data.Data()
-        nn_model = model.Model()
+        data_handle = data.Data(self.__paras)
+        nn_model = model.Model(self.__paras)
         log = open('train_log', mode='a')
         log.write(str(datetime.datetime.now()) + '\n')
         log.write('start training\n')
-        log.write('training for ' + str(setting.train_times) + ' times\n')
+        log.write('training for ' + str(self.__paras.train_times) + ' times\n')
         with tf.Session(config=self.__gpu_config()) as sess:
             # model file
             self.__get_ckpt(sess)
             # train loop
             best_accuracy = 0
-            for train_loop in range(setting.train_times):
+            for train_loop in range(self.__paras.train_times):
                 start_time = time.time()
                 self.__train_once(sess, data_handle, nn_model)
                 valid_accuracy = self.__valid(sess, data_handle, nn_model)
@@ -91,7 +92,7 @@ class Train:
                             model.input_semantic_units : train_batches[count][4],
                             model.input_children_of_semantic_units : train_batches[count][5],
                             model.correct_output : train_batches[count][6],
-                            model.keep_prob : setting.keep_prob
+                            model.keep_prob : self.__paras.keep_prob
                             }
                     )
     
@@ -137,8 +138,11 @@ class Train:
         
         
         
-        
-tf.reset_default_graph() # for spyder
-handle = Train()
-#handle.test_train()
-handle.train()
+if (__name__ == '__main__'):
+    tf.reset_default_graph() # for spyder
+    
+    from setting import Parameters
+    import sys
+    handle = Train(Parameters.get_paras_from_argv(sys.argv))
+    #handle.test_train()
+    handle.train()

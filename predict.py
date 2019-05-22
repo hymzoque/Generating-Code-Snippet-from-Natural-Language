@@ -11,20 +11,21 @@ import ast
 import astunparse
 
 import model
-import setting
+from setting import Path
 from data_generator import Generator
 
 class Predict:
-    def __init__(self):
-        self.__model_dir = 'model/'
-        self.__data_dir = setting.CONALA_PATH
-        self.__prediction_dir = 'prediction/'
-        self.__beam_size = setting.predict_beam_size
+    def __init__(self, paras):
+        self.__paras = paras
+        self.__model_dir = Path.MODEL_PATH
+        self.__data_dir = self.__paras.dataset_path
+        self.__prediction_dir = Path.PREDICTION_PATH
+        self.__beam_size = self.__paras.predict_beam_size
         self.__read_vocabulary()
     
     ''' test prediction for 1 sentence only '''
     def test_predict(self):
-        nn_model = model.Model()
+        nn_model = model.Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
             # restore model
             self.__restore_ckpt(sess)
@@ -54,14 +55,14 @@ class Predict:
     def __predict_one_sentence(self, description, write_path, session, model):
         # initialize the beam
         begin_unit = Predict.__Beam_Unit(description, traceable_list=['Module', '{'], 0, 1, self.__tree_nodes_vocabulary)
-        begin_unit.generate_data()
+        begin_unit.generate_data(self.__paras)
         beam = [begin_unit]
         
         # recoord best result
         max_log_probability_result = Predict.__Beam_Unit(None, None, -1e10, None)
         
         # predicition
-        for i in range(setting.max_predict_time):
+        for i in range(self.__paras.max_predict_time):
             ''' predict ''' 
             # [beam_size(batch_size) x tree_node_num]
             log_predicted_output = self.__predict_one_beam(session, beam, model)
@@ -91,9 +92,9 @@ class Predict:
                     # the 2nd id is the end node
                     log_probability_of_end_node = unit_log_predicted_output[1]
                     # if end the log probability is
-                    temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, setting.short_sentence_penalty)
+                    temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras.short_sentence_penalty)
                     twmp = temp + log_probability_of_end_node
-                    end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, setting.short_sentence_penalty)
+                    end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, self.__paras.short_sentence_penalty)
                     # if better result appears, update the best result
                     if (end_log_probability > max_log_probability_result.log_probability):
                         max_log_probability_result = Predict.__Beam_Unit(description, unit_traceable_list[:], end_log_probability, beam_unit.predicted_nodes_num + 1, self.__tree_nodes_vocabulary)
@@ -128,9 +129,9 @@ class Predict:
                         # new nodes num
                         new_nodes_num = beam_unit.predicted_nodes_num + 1
                         # new probability
-                        temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, setting.short_sentence_penalty)
+                        temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras.short_sentence_penalty)
                         temp = temp + each_probability
-                        new_probability = temp / math.pow(new_nodes_num, setting.short_sentence_penalty)
+                        new_probability = temp / math.pow(new_nodes_num, self.__paras.short_sentence_penalty)
                         
                         new_beam_unit = self.__Beam_Unit(description, new_traceable_list, new_probability, new_nodes_num, self.__tree_nodes_vocabulary)
                         new_beam.append(new_beam_unit)
@@ -143,7 +144,7 @@ class Predict:
             
             ''' generate new beam data '''
             for beam_unit in beam:
-                beam_unit.generate_data()
+                beam_unit.generate_data(self.__paras)
             
         ''' generate and write out the code '''
         # code
@@ -396,7 +397,7 @@ class Predict:
             description = re.sub('[\'\"`]', '', description).strip()
             description = description.split(' ')
             description_ids = self.__get_ids_from_nl_vocabulary(description)
-            description_np = np.zeros([setting.nl_len])
+            description_np = np.zeros([self.__paras.nl_len])
             for i in range(len(description_ids)):
                 description_np[i] = description_ids[i]
             descriptions.append(description_np)
@@ -419,7 +420,7 @@ class Predict:
             self.__tree_nodes_vocabulary = tree_nodes_vocabulary
         
         ''' generate data from traceable list '''
-        def generate_data(self):
+        def generate_data(self, paras):
             # node_list & parent_list & grandparent_list
             node_list = []
             parent_list = []
@@ -455,7 +456,7 @@ class Predict:
                 if not (grandparent_found): grandparent_list.append('<Empty_Node>')
             
             # semantic_units & semantic_unit_children
-            semantic_units, semantic_unit_children = Generator.process_semantic_unit(self.traceable_list)
+            semantic_units, semantic_unit_children = Generator.process_semantic_unit(self.traceable_list, paras)
             
             # get ids
             node_list = self.__get_ids_from_tree_nodes_vocabulary(node_list)
@@ -468,11 +469,11 @@ class Predict:
             semantic_unit_children = semantic_unit_children_ids
             
             # fill 0 in spare place(using numpy)
-            self.node_list = np.zeros([setting.tree_len])
-            self.parent_list = np.zeros([setting.tree_len])
-            self.grandparent_list = np.zeros([setting.tree_len])
-            self.semantic_units = np.zeros([setting.semantic_units_len])
-            self.semantic_unit_children = np.zeros([setting.semantic_units_len, setting.semantic_unit_children_num])   
+            self.node_list = np.zeros([self.__paras.tree_len])
+            self.parent_list = np.zeros([self.__paras.tree_len])
+            self.grandparent_list = np.zeros([self.__paras.tree_len])
+            self.semantic_units = np.zeros([self.__paras.semantic_units_len])
+            self.semantic_unit_children = np.zeros([self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])   
             for j in range(len(node_list)):
                 self.node_list[j] = node_list[j]
             for j in range(len(parent_list)):
@@ -490,7 +491,8 @@ class Predict:
         def __get_ids_from_tree_nodes_vocabulary(self, nodes):
             return Generator.get_ids_from_tree_nodes_vocabulary(nodes, self.__tree_nodes_vocabulary)
 
-
-handle = Predict()
-#handle.test_predict()
-handle.predict()
+if (__name__ == '__main__'):
+    from setting import Parameters
+    handle = Predict(Parameters.get_conala_paras())
+    #handle.test_predict()
+    handle.predict()
