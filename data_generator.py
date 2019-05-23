@@ -32,15 +32,16 @@ class Generator:
         
     
         ''' process and generate the train and test data '''
-        train_data_provider = Generator.__Data_provider(self.__data_dir + 'conala-train.json')
-        test_data_provider = Generator.__Data_provider(self.__data_dir + 'conala-test.json')
+        train_data_provider = Generator.__Data_provider(self.__data_dir, 'train', self.__paras)
+        test_data_provider = Generator.__Data_provider(self.__data_dir, 'test', self.__paras)
+        
         # register vocabulary
         self.__register_ids_to_vocabulary([train_data_provider, test_data_provider])
         train_data, train_data_for_read = self.__process_each(train_data_provider)
         test_data, test_data_for_read = self.__process_each(test_data_provider)
         
         if not os.path.exists(self.__data_dir + Path.GENERATED_PATH):
-            os.mkdir(self.__data_dir + Path.GENERATED_PATH)
+            os.mkdirs(self.__data_dir + Path.GENERATED_PATH)
         self.__write_nl_vocabulary()
         self.__write_tree_nodes_vocabulary()
         self.__write_data(train_data, self.__data_dir + Path.TRAIN_DATA_PATH)
@@ -54,21 +55,45 @@ class Generator:
     '''
     '''
     class __Data_provider:
-        def __init__(self, path):
-            with open(path, 'r') as f:
-                data_read = f.read()
-            # there are some null descriptions in data , so we need define the 'null' variable before eval
-            null = 'null'
-            self.__data_read = eval(data_read)
+        def __init__(self, dataset_path, train_or_test, paras):
+            ''' CONALA '''
+            if (dataset_path == Path.CONALA_PATH):
+                if (train_or_test == 'train'):
+                    path = dataset_path + 'conala-train.json'
+                else:
+                    path = dataset_path + 'conala-test.json'
+                
+                with open(path, 'r') as f:
+                    data_read_conala = f.read()
+                # there are some null descriptions in data , so we need define the 'null' variable before eval
+                null = 'null'
+                self.__data_read_conala = eval(data_read_conala)                
+                
+                self.data_iter = self.__data_iter_conala
+                return
             
-            '''
-            @description : list of word
-            @ast_root : root of ast
-            '''
-            self.data_iter = self.__data_iter_conala
-        
+            ''' HS '''
+            if (dataset_path == Path.HS_PATH):
+                if (train_or_test == 'train'):
+                    path_in = dataset_path + 'train_hs.in'
+                    path_out = dataset_path + 'train_hs.out'
+                else:
+                    path_in = dataset_path + 'dev_hs.in'
+                    path_out = dataset_path + 'dev_hs.out'
+                with open(path_in, 'r', encoding='utf-8') as f_in, open(path_out, 'r', encoding='utf-8') as f_out:
+                    data_read_in = f_in.readlines()
+                    data_read_out = f_out.readlines()
+                    num = len(data_read_in)
+                    self.__data_read_hs = []
+                    for i in range(num):
+                        if (data_read_in[i] != ''):
+                            self.__data_read_hs.append([data_read_in[i], data_read_out[i]])
+                    
+                self.data_iter = self.__data_iter_hs
+                return
+                
         def __data_iter_conala(self):
-            for data_unit in self.__data_read:
+            for data_unit in self.__data_read_conala:
                 description = data_unit['rewritten_intent']
                 # skip the null description
                 if (description == 'null') : continue
@@ -78,8 +103,14 @@ class Generator:
                 ast_root = ast.parse(data_unit['snippet'])
                 yield description, ast_root 
         def __data_iter_hs(self):
-#            for 
-            return
+            for description, code in self.__data_read_hs:
+                description = re.sub(r'<b>|</b>|\.|,|;|\$|#|<i>|</i>|\(|\)', '', description).strip()
+                description = description.split(' ')
+                
+                code = code.replace('§', '\n')
+                code = code.replace('\ ', '')
+                ast_root = ast.parse(code)
+                yield description, ast_root
         
         
     ''' 
@@ -421,5 +452,5 @@ class Generator:
             
 if (__name__ == '__main__'):
     from setting import Parameters
-    handle = Generator(Parameters.get_hs_paras())
+#    handle = Generator(Parameters.get_hs_paras())
     handle = Generator(Parameters.get_conala_paras())

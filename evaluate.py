@@ -5,29 +5,32 @@ todo multi dataset
 import re
 
 import bleu_score
-import setting
+from setting import Path
 
 class Evaluate:
-    def __init__(self):
-        self.__read_correct_code_conala()
+    def __init__(self, paras):
+        self.__paras = paras
+        self.__read_correct_code()
         self.__read_predicted_code()
         self.__evaluate()
     
-    def __read_correct_code_conala(self):
-        path = setting.CONALA_PATH + 'conala-test.json'
-        with open(path, 'r') as f:
-            null = 'null'
-            test_data = eval(f.read())
+    def __read_correct_code(self):
+        if (self.__paras.dataset_path == Path.CONALA_PATH):
         
-        self.__correct_code = []
-        for data_unit in test_data:
-            code = data_unit['snippet']
-            if (code == 'null') : continue
-            self.__correct_code.append(code)
+            path = Path.CONALA_PATH + 'conala-test.json'
+            with open(path, 'r') as f:
+                null = 'null'
+                test_data = eval(f.read())
+            
+            self.__correct_code = []
+            for data_unit in test_data:
+                code = data_unit['snippet']
+                if (code == 'null') : continue
+                self.__correct_code.append(code)
         
     
     def __read_predicted_code(self):
-        path = 'prediction/'
+        path = Path.get_prediction_path(self.__paras)
         self.__predicted_code = []
         for i in range(len(self.__correct_code)):
             with open(path + str(i), 'r') as f:
@@ -68,5 +71,7 @@ class Evaluate:
         return tokens
     
     
-
-handle = Evaluate()
+if (__name__ == '__main__'):
+    from setting import Parameters
+    import sys
+    handle = Evaluate(Parameters.get_paras_from_argv(sys.argv))

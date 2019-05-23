@@ -15,7 +15,8 @@ from setting import Path
 class Train:
     def __init__(self, paras):
         self.__paras = paras
-        self.__model_dir = Path.MODEL_PATH
+        self.__model_dir = Path.get_model_path(paras)
+        
     
     
     ''' test the training and valid time of one batch '''
@@ -133,6 +134,8 @@ class Train:
     ''' save checkpoint '''
     def __save_ckpt(self, session):
         dir_path = self.__model_dir
+        if not os.path.exists(dir_path):
+            os.mkdirs(dir_path)
         saver = tf.train.Saver(max_to_keep=1)
         saver.save(session, dir_path + 'model.ckpt')
         

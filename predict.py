@@ -17,9 +17,9 @@ from data_generator import Generator
 class Predict:
     def __init__(self, paras):
         self.__paras = paras
-        self.__model_dir = Path.MODEL_PATH
+        self.__model_dir = Path.get_model_path(paras)
         self.__data_dir = self.__paras.dataset_path
-        self.__prediction_dir = Path.PREDICTION_PATH
+        self.__prediction_dir = Path.get_prediction_path(paras)
         self.__beam_size = self.__paras.predict_beam_size
         self.__read_vocabulary()
     
@@ -45,6 +45,9 @@ class Predict:
             self.__restore_ckpt(sess)
             
             descriptions = self.__read_description()
+            
+            if not os.path.exists(self.__prediction_dir):
+                os.mkdirs(self.__prediction_dir)
             for n in range(len(descriptions)):
                 description = descriptions[n]
                 write_path = self.__prediction_dir + str(n)
@@ -374,9 +377,9 @@ class Predict:
     
     ''' read the nl vocabulary & tree nodes vocabulary & invert tree nodes vocabulary'''
     def __read_vocabulary(self):
-        with open(self.__data_dir + 'nl_vocabulary', 'r') as f:
+        with open(self.__data_dir + Path.NL_VOCABULARY_PATH, 'r') as f:
             self.__nl_vocabulary = eval(f.read())
-        with open(self.__data_dir + 'tree_nodes_vocabulary', 'r') as f:
+        with open(self.__data_dir + Path.TREE_NODES_VOCABULARY_PATH, 'r') as f:
             self.__tree_nodes_vocabulary = eval(f.read())
         self.__invert_tree_nodes_vocabulary = {v:k for k,v in self.__tree_nodes_vocabulary.items()}
     '''
@@ -384,24 +387,34 @@ class Predict:
     @return descriptions : ids of words numpy forms
     '''
     def __read_description(self):
-        # todo multi dataset
-        path = self.__data_dir + 'conala-test.json'
-        with open(path, 'r') as f:
-            null = 'null'
-            test_data = eval(f.read())
+        if (self.__paras.dataset_path == Path.CONALA_PATH):
+            # todo
+            path = self.__data_dir + 'conala-test.json'
+            with open(path, 'r') as f:
+                null = 'null'
+                test_data = eval(f.read())
+            
+            descriptions = []
+            for data_unit in test_data:
+                description = data_unit['rewritten_intent']
+                if (description == 'null') : continue
+                description = re.sub('[\'\"`]', '', description).strip()
+                description = description.split(' ')
+                description_ids = self.__get_ids_from_nl_vocabulary(description)
+                description_np = np.zeros([self.__paras.nl_len])
+                for i in range(len(description_ids)):
+                    description_np[i] = description_ids[i]
+                descriptions.append(description_np)
+            return descriptions
         
-        descriptions = []
-        for data_unit in test_data:
-            description = data_unit['rewritten_intent']
-            if (description == 'null') : continue
-            description = re.sub('[\'\"`]', '', description).strip()
-            description = description.split(' ')
-            description_ids = self.__get_ids_from_nl_vocabulary(description)
-            description_np = np.zeros([self.__paras.nl_len])
-            for i in range(len(description_ids)):
-                description_np[i] = description_ids[i]
-            descriptions.append(description_np)
-        return descriptions
+        if (self.__paras.dataset_path == Path.HS_PATH):
+            
+            # todo
+            
+            # test
+            
+            return
+        
     
     def __get_ids_from_nl_vocabulary(self, words):
         return Generator.get_ids_from_nl_vocabulary(words, self.__nl_vocabulary)    
@@ -493,6 +506,7 @@ class Predict:
 
 if (__name__ == '__main__'):
     from setting import Parameters
-    handle = Predict(Parameters.get_conala_paras())
+    import sys
+    handle = Predict(Parameters.get_paras_from_argv(sys.argv))
     #handle.test_predict()
     handle.predict()
