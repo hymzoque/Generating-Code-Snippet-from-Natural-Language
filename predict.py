@@ -23,7 +23,7 @@ class Predict:
         self.__beam_size = self.__paras.predict_beam_size
         self.__read_vocabulary()
     
-    ''' test prediction for 1 sentence only '''
+    ''' test prediction time for 1 sentence '''
     def test_predict(self):
         nn_model = model.Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
@@ -39,7 +39,7 @@ class Predict:
             
     ''' predict method '''
     def predict(self):
-        nn_model = model.Model()
+        nn_model = model.Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
             # restore model
             self.__restore_ckpt(sess)
@@ -47,7 +47,7 @@ class Predict:
             descriptions = self.__read_description()
             
             if not os.path.exists(self.__prediction_dir):
-                os.mkdirs(self.__prediction_dir)
+                os.mkdir(self.__prediction_dir)
             for n in range(len(descriptions)):
                 description = descriptions[n]
                 write_path = self.__prediction_dir + str(n)
@@ -153,7 +153,7 @@ class Predict:
         # code
         code = self.__traceable_list_to_code(max_log_probability_result.traceable_list)
         # write out
-        with open(write_path, 'w') as f:
+        with open(write_path, 'w', encoding='utf-8') as f:
             f.write(code)
         
     '''
@@ -264,7 +264,7 @@ class Predict:
         return appendable_layers
     
     '''
-    check grammar by parent, child and position of last child(position of this child - 1)
+    check grammar by parent, child and position of previous child(position of this child - 1)
     may need to extend
     '''
     def __grammar_no_problem(self, parent, child, position):
@@ -377,24 +377,25 @@ class Predict:
     
     ''' read the nl vocabulary & tree nodes vocabulary & invert tree nodes vocabulary'''
     def __read_vocabulary(self):
-        with open(self.__data_dir + Path.NL_VOCABULARY_PATH, 'r') as f:
+        with open(self.__data_dir + Path.NL_VOCABULARY_PATH, 'r', encoding='utf-8') as f:
             self.__nl_vocabulary = eval(f.read())
-        with open(self.__data_dir + Path.TREE_NODES_VOCABULARY_PATH, 'r') as f:
+        with open(self.__data_dir + Path.TREE_NODES_VOCABULARY_PATH, 'r', encoding='utf-8') as f:
             self.__tree_nodes_vocabulary = eval(f.read())
         self.__invert_tree_nodes_vocabulary = {v:k for k,v in self.__tree_nodes_vocabulary.items()}
+    
     '''
     process method with same form with Generator.__Data_provider
     @return descriptions : ids of words numpy forms
     '''
     def __read_description(self):
+        descriptions = []
+            
         if (self.__paras.dataset_path == Path.CONALA_PATH):
-            # todo
-            path = self.__data_dir + 'conala-test.json'
-            with open(path, 'r') as f:
+            path = self.__paras.dataset_path + 'conala-test.json'
+            with open(path, 'r', encoding='utf-8') as f:
                 null = 'null'
                 test_data = eval(f.read())
             
-            descriptions = []
             for data_unit in test_data:
                 description = data_unit['rewritten_intent']
                 if (description == 'null') : continue
@@ -408,12 +409,20 @@ class Predict:
             return descriptions
         
         if (self.__paras.dataset_path == Path.HS_PATH):
+            path = self.__paras.dataset_path + 'test_hs.in'
+            with open(path, 'r', encoding='utf-8') as f:
+                test_in = f.readlines()
             
-            # todo
-            
-            # test
-            
-            return
+            for description in test_in:
+                if (description == ''): continue
+                description = re.sub(r'<b>|</b>|\.|,|;|\$|#|<i>|</i>|\(|\)', '', description).strip()
+                description = description.split(' ')
+                description_ids = self.__get_ids_from_nl_vocabulary(description)
+                description_np = np.zeros([self.__paras.nl_len])
+                for i in range(len(description_ids)):
+                    description_np[i] = description_ids[i]
+                descriptions.append(description_np)
+            return descriptions
         
     
     def __get_ids_from_nl_vocabulary(self, words):

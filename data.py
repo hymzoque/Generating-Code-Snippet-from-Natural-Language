@@ -37,7 +37,7 @@ class Data:
         i = 0
         while (os.path.exists(path + str(i))):
             t = time.time()
-            with open(path + str(i), 'r') as f:
+            with open(path + str(i), 'r', encoding='utf-8') as f:
                 train_data.extend(eval(f.read()))
             i += 1
             print(str(time.time() - t))
@@ -51,7 +51,7 @@ class Data:
         test_data = []
         i = 0
         while (os.path.exists(path + str(i))):
-            with open(path + str(i), 'r') as f:
+            with open(path + str(i), 'r', encoding='utf-8') as f:
                 test_data.extend(eval(f.read()))
             i += 1
         valid_data = self.__data_process(test_data)    

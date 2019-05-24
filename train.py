@@ -24,9 +24,7 @@ class Train:
         data_handle = data.Data(self.__paras)
         nn_model = model.Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
-            
-            self.__get_ckpt(sess)
-            
+#            self.__get_ckpt(sess)
             start = time.time()
             
             self.__train_once(sess, data_handle, nn_model)
@@ -36,8 +34,7 @@ class Train:
             self.__valid(sess, data_handle, nn_model)
             end = time.time()
             print('valid time used : ' + str(end - mid))
-            
-            self.__save_ckpt(sess)
+#            self.__save_ckpt(sess)
             
     ''' train method '''
     def train(self):
@@ -135,7 +132,7 @@ class Train:
     def __save_ckpt(self, session):
         dir_path = self.__model_dir
         if not os.path.exists(dir_path):
-            os.mkdirs(dir_path)
+            os.mkdir(dir_path)
         saver = tf.train.Saver(max_to_keep=1)
         saver.save(session, dir_path + 'model.ckpt')
         

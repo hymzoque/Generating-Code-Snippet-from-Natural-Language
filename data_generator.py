@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 generate train and valid/test data
-
+todo generate pre train data
 """
 
 import ast
@@ -78,7 +78,7 @@ class Generator:
                 else:
                     path = dataset_path + 'conala-test.json'
                 
-                with open(path, 'r') as f:
+                with open(path, 'r', encoding='utf-8') as f:
                     data_read_conala = f.read()
                 # there are some null descriptions in data , so we need define the 'null' variable before eval
                 null = 'null'

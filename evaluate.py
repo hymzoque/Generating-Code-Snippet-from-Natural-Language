@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-todo multi dataset
+
 """
 import re
 
@@ -15,25 +15,37 @@ class Evaluate:
         self.__evaluate()
     
     def __read_correct_code(self):
-        if (self.__paras.dataset_path == Path.CONALA_PATH):
+        self.__correct_code = []
         
+        if (self.__paras.dataset_path == Path.CONALA_PATH):
             path = Path.CONALA_PATH + 'conala-test.json'
-            with open(path, 'r') as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 null = 'null'
                 test_data = eval(f.read())
             
-            self.__correct_code = []
             for data_unit in test_data:
                 code = data_unit['snippet']
-                if (code == 'null') : continue
+                if (code == 'null'): continue
                 self.__correct_code.append(code)
+            return
         
+        if (self.__paras.dataset_path == Path.HS_PATH):
+            path = Path.HS_PATH + 'test_hs.out'
+            with open(path, 'r', encoding='utf-8') as f:
+                test_out = f.readlines()
+                
+            for code in test_out:
+                if (code == ''): continue
+                code = code.replace('§', '\n')
+                code = code.replace('\ ', '')
+                self.__correct_code.append(code)
+            return
     
     def __read_predicted_code(self):
         path = Path.get_prediction_path(self.__paras)
         self.__predicted_code = []
         for i in range(len(self.__correct_code)):
-            with open(path + str(i), 'r') as f:
+            with open(path + str(i), 'r', encoding='utf-8') as f:
                 self.__predicted_code.append(f.read())
         
     
@@ -47,7 +59,7 @@ class Evaluate:
         mean_bleu = sum(self.__bleus) / len(self.__bleus)
         
         log_path = 'evaluate_log'
-        with open(log_path, 'w') as f:
+        with open(log_path, 'w', encoding='utf-8') as f:
             f.write('\n')
             for i in range(len(self.__correct_code)):
                 f.write('correct : ' + self.__correct_code[i] + '\n')
