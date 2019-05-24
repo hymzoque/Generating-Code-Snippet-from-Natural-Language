@@ -32,30 +32,45 @@ class Generator:
         
     
         ''' process and generate the train and test data '''
-        train_data_provider = Generator.__Data_provider(self.__data_dir, 'train', self.__paras)
-        test_data_provider = Generator.__Data_provider(self.__data_dir, 'test', self.__paras)
+        train_data_provider = Generator.__Data_provider(self.__data_dir, 'train')
+        test_data_provider = Generator.__Data_provider(self.__data_dir, 'test')
         
         # register vocabulary
         self.__register_ids_to_vocabulary([train_data_provider, test_data_provider])
         train_data, train_data_for_read = self.__process_each(train_data_provider)
         test_data, test_data_for_read = self.__process_each(test_data_provider)
         
+        # data dir
         if not os.path.exists(self.__data_dir + Path.GENERATED_PATH):
-            os.mkdirs(self.__data_dir + Path.GENERATED_PATH)
+            os.mkdir(self.__data_dir + Path.GENERATED_PATH)
         self.__write_nl_vocabulary()
         self.__write_tree_nodes_vocabulary()
-        self.__write_data(train_data, self.__data_dir + Path.TRAIN_DATA_PATH)
+        
+        # split the data file to several parts
+        once_write_num = 5000
+        i = 0
+        while (i * once_write_num < len(train_data)):  
+            self.__write_data(train_data[i*once_write_num:(i+1)*once_write_num], self.__data_dir + Path.TRAIN_DATA_PATH + str(i))
+            i += 1
+        i = 0
+        while (i * once_write_num < len(test_data)):
+            self.__write_data(test_data[i*once_write_num:(i+1)*once_write_num], self.__data_dir + Path.TEST_DATA_PATH + str(i))
+            i += 1
+        
         self.__write_data(train_data_for_read, self.__data_dir + Path.TRAIN_DATA_PATH + '_for_read')
-        self.__write_data(test_data, self.__data_dir + Path.TEST_DATA_PATH)
         self.__write_data(test_data_for_read, self.__data_dir + Path.TEST_DATA_PATH + '_for_read')
         
         self.__write_statistical_data()
         
     
     '''
+    @train_or_test : 'train' or 'test' 
+    
     '''
     class __Data_provider:
-        def __init__(self, dataset_path, train_or_test, paras):
+        def __init__(self, dataset_path, train_or_test):
+            ''' data_iter '''
+            
             ''' CONALA '''
             if (dataset_path == Path.CONALA_PATH):
                 if (train_or_test == 'train'):
@@ -452,5 +467,5 @@ class Generator:
             
 if (__name__ == '__main__'):
     from setting import Parameters
-#    handle = Generator(Parameters.get_hs_paras())
+    handle = Generator(Parameters.get_hs_paras())
     handle = Generator(Parameters.get_conala_paras())

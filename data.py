@@ -3,8 +3,10 @@
 
 """
 import numpy as np
+import os
+import time
 
-from self.__paras import Path
+from setting import Path
 
 class Data:
     def __init__(self, paras):
@@ -31,8 +33,14 @@ class Data:
     '''
     def __train_data_process(self):
         path = self.__data_dir + Path.TRAIN_DATA_PATH
-        with open(path, 'r') as f:
-            train_data = eval(f.read())
+        train_data = []
+        i = 0
+        while (os.path.exists(path + str(i))):
+            t = time.time()
+            with open(path + str(i), 'r') as f:
+                train_data.extend(eval(f.read()))
+            i += 1
+            print(str(time.time() - t))
         self.__train_data = self.__data_process(train_data)
         
     '''
@@ -40,8 +48,12 @@ class Data:
     '''
     def __valid_data_process(self):
         path = self.__data_dir + Path.TEST_DATA_PATH
-        with open(path, 'r') as f:
-            test_data = eval(f.read())       
+        test_data = []
+        i = 0
+        while (os.path.exists(path + str(i))):
+            with open(path + str(i), 'r') as f:
+                test_data.extend(eval(f.read()))
+            i += 1
         valid_data = self.__data_process(test_data)    
         
         d0 = valid_data[0]
