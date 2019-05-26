@@ -17,8 +17,6 @@ class Train:
         self.__paras = paras
         self.__model_dir = Path.get_model_path(paras)
         
-    
-    
     ''' test the training and valid time of one batch '''
     def test_train(self):
         data_handle = data.Data(self.__paras)
@@ -90,7 +88,8 @@ class Train:
                             model.input_semantic_units : train_batches[count][4],
                             model.input_children_of_semantic_units : train_batches[count][5],
                             model.correct_output : train_batches[count][6],
-                            model.keep_prob : self.__paras.keep_prob
+                            model.keep_prob : self.__paras.keep_prob,
+                            model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)
                             }
                     )
     
@@ -111,7 +110,8 @@ class Train:
                             model.input_semantic_units : valid_batches[count][4],
                             model.input_children_of_semantic_units : valid_batches[count][5],
                             model.correct_output : valid_batches[count][6],
-                            model.keep_prob : 1.0                           
+                            model.keep_prob : 1.0,
+                            model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)                
                             })
             accuracy += batch_accuracy[0]
         accuracy /= batch_num
@@ -140,7 +140,6 @@ class Train:
         
 if (__name__ == '__main__'):
     tf.reset_default_graph() # for spyder
-    
     from setting import Parameters
     import sys
     handle = Train(Parameters.get_paras_from_argv(sys.argv))

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 generate train and valid/test data
-todo generate pre train data
+generate pre train data
 """
 
 import ast
@@ -37,8 +37,9 @@ class Generator:
         
         # register vocabulary
         self.__register_ids_to_vocabulary([train_data_provider, test_data_provider])
-        train_data, train_data_for_read = self.__process_each(train_data_provider)
-        test_data, test_data_for_read = self.__process_each(test_data_provider)
+        
+        train_data, train_data_for_read, self.__pre_train_data = self.__process_each(train_data_provider)
+        test_data, test_data_for_read, stub = self.__process_each(test_data_provider)
         
         # data dir
         if not os.path.exists(self.__data_dir + Path.GENERATED_PATH):
@@ -60,6 +61,7 @@ class Generator:
         self.__write_data(train_data_for_read, self.__data_dir + Path.TRAIN_DATA_PATH + '_for_read')
         self.__write_data(test_data_for_read, self.__data_dir + Path.TEST_DATA_PATH + '_for_read')
         
+        self.__write_pre_train_data()
         self.__write_statistical_data()
         
     
@@ -130,7 +132,7 @@ class Generator:
         
     ''' 
     process train or test data 
-    @result :[
+    @result, result_for_read :[
        [[description],
         [node_list],
         [node_parent_list],
@@ -140,11 +142,14 @@ class Generator:
         [correct_prediction]],
         ...
     ]
+    @pre_train_data
     '''
     def __process_each(self, data_provider):
         
         result = []
         result_for_read = []
+        pre_train_data = []
+        
         for description, ast_root in data_provider.data_iter():
             self.__data_num += 1
             
@@ -167,7 +172,11 @@ class Generator:
            
             self.__process_node(ast_root, parent, grandparent, node_list, node_parent_list, node_grandparent_list, traceable_node_list)
             
-            #
+            # fill in pre_train_data(ids)
+            for i in range(len(node_list)):
+                pre_train_data.append(self.__get_ids_from_tree_nodes_vocabulary([node_list[i], node_parent_list[i], node_grandparent_list[i]]))
+            
+            # statistic
             self.__tree_nodes_sum += len(node_list)
             if len(node_list) > self.__tree_nodes_max_num : self.__tree_nodes_max_num = len(node_list)
             
@@ -223,7 +232,7 @@ class Generator:
                 data_unit_ids.append(self.__get_ids_from_tree_nodes_vocabulary(correct_prediction))
                 result.append(data_unit_ids)
                 
-        return result, result_for_read
+        return result, result_for_read, pre_train_data
 
     '''
     recursively append node and its parent&grandparent to list
@@ -452,6 +461,11 @@ class Generator:
                 if (count != len(data) - 1):
                     f.write(',\n\n')
             f.write('\n]')
+                    
+    ''' '''
+    def __write_pre_train_data(self):
+        with open(self.__data_dir + Path.PRE_TRAIN_DATA_PATH, 'w', encoding='utf-8') as f:
+            f.write(str(self.__pre_train_data))
     
     '''  '''
     def __write_statistical_data(self):
@@ -463,7 +477,7 @@ class Generator:
             f.write('tree nodes average num: ' + str(self.__tree_nodes_sum / self.__data_num) + '\n')
             f.write('tree nodes max num: ' + str(self.__tree_nodes_max_num) + '\n')
             f.write('semantic unit max num: ' + str(self.__semantic_unit_max_num) + '\n')
-            
+    
             
 if (__name__ == '__main__'):
     from setting import Parameters

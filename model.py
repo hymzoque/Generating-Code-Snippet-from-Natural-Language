@@ -34,9 +34,8 @@ class Model:
         self.vocabulary_embedding = tf.get_variable('vocabulary_embedding', shape=[self.__paras.vocabulary_num, self.__paras.vocabulary_embedding_size], initializer=self.__initializer())
         self.tree_node_embedding = tf.get_variable('tree_node_embedding', shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size], initializer=self.__initializer())
         
-        # pre train layer
-#        if (self.__paras.use_pre_train):
-#            self.pre_train_tree_node_embedding = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size])
+        # pre train embedding
+        self.pre_train_tree_node_embedding = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size])
 
     '''
     
@@ -62,13 +61,26 @@ class Model:
         # [batch size, tree length, embedding size]
         temp = tf.reduce_max(temp, axis=2)
         temp = tf.nn.relu(temp)
-        # todo multi channel
         
         # [batch size, tree length, embedding size]
         tree_parent_features = self.__deep_CNN(temp, self.__paras.tree_node_embedding_size)
         
+        # pre train and 2 channel
+        if (self.__paras.use_pre_train):
+            ast_nodes_embedding_2 = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input_ast_nodes)
+            ast_parent_nodes_embedding_2 = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input_ast_parent_nodes)
+            ast_grandparent_nodes_embedding_2 = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input_ast_grandparent_nodes)
+            parent_stack_2 = tf.stack([ast_nodes_embedding_2, ast_parent_nodes_embedding_2, ast_grandparent_nodes_embedding_2], 2)
+            temp_2 = tf.layers.conv2d(parent_stack_2, self.__paras.tree_node_embedding_size, [1, 3])
+            temp_2 = tf.reduce_max(temp_2, axis=2)
+            temp_2 = tf.nn.relu(temp_2)        
+            tree_parent_features_2 = self.__deep_CNN(temp_2, self.__paras.tree_node_embedding_size)        
+            # max pooling 
+            feature_stack = tf.stack([tree_parent_features, tree_parent_features_2], axis=1)
+            tree_parent_features = self.__multi_channel_pooling(feature_stack)
+        
         ''' 
-        input of semantic order tree nods 
+        input of semantic order tree nodes 
         '''
         if (self.__paras.use_semantic_logic_order):
             semantic_units_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, self.input_semantic_units)
@@ -80,39 +92,40 @@ class Model:
                 child_embedding = tf.expand_dims(child_embedding, axis=2)
                 semantic_em_stack = tf.concat([semantic_em_stack, child_embedding], axis=2)            
             
-            
-    #        count = tf.constant(0)
-    #        cond = lambda i, s : tf.less(i, self.__paras.semantic_unit_children_num)
-    #        #loop body of semantic embedding processing
-    #        def __loop_body_embedding_processing(i, stack):
-    #            child = self.input_children_of_semantic_units[:, :, i]
-    #            child_embedding = tf.nn.embedding_lookup(self.tree_node_embedding, child)
-    #            child_embedding = tf.expand_dims(child_embedding, axis=2)
-    #            stack = tf.concat([stack, child_embedding], axis=2)
-    #            i = tf.add(i, 1)
-    #            return i, stack
-    #        body = __loop_body_embedding_processing
-    #        i, semantic_em_stack = tf.while_loop(cond, body, [count, semantic_em_stack], shape_invariants=[count.get_shape(), tf.TensorShape([None, int(semantic_em_stack.shape[1]), None, int(semantic_em_stack.shape[3])])])
-            #
             temp = tf.layers.conv2d(semantic_em_stack, self.__paras.tree_node_embedding_size, [1, self.__paras.semantic_unit_children_num + 1])
             temp = tf.reduce_max(temp, axis=2)
             temp = tf.nn.relu(temp) 
             
-            # todo multi channel
-            
-            
             semantic_order_features = self.__deep_CNN(temp, self.__paras.tree_node_embedding_size)
-        
+            
+            # pre train and 2 channel
+            if (self.__paras.use_pre_train):
+                semantic_units_embedding_2 = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input_semantic_units)
+                semantic_em_stack_2 = tf.expand_dims(semantic_units_embedding_2, axis=2)
+                for i in range(self.__paras.semantic_unit_children_num):
+                    child = self.input_children_of_semantic_units[:, :, i]
+                    child_embedding_2 = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, child)
+                    child_embedding_2 = tf.expand_dims(child_embedding_2, axis=2)
+                    semantic_em_stack_2 = tf.concat([semantic_em_stack_2, child_embedding_2], axis=2)            
+                
+                temp_2 = tf.layers.conv2d(semantic_em_stack_2, self.__paras.tree_node_embedding_size, [1, self.__paras.semantic_unit_children_num + 1])
+                temp_2 = tf.reduce_max(temp_2, axis=2)
+                temp_2 = tf.nn.relu(temp_2) 
+                semantic_order_features_2 = self.__deep_CNN(temp_2, self.__paras.tree_node_embedding_size)                
+                # max pooling
+                feature_stack = tf.stack([semantic_order_features, semantic_order_features_2], axis=1)
+                semantic_order_features = self.__multi_channel_pooling(feature_stack)
+            
         '''
         attention
         
         '''
         # pooling
         # [batch size, nl/tree embedding size]
-        nl_features_pooling = self.__max_height_pooling(nl_features)
-        tree_parent_features_pooling = self.__max_height_pooling(tree_parent_features)
+        nl_features_pooling = self.__max_feature_pooling(nl_features)
+        tree_parent_features_pooling = self.__max_feature_pooling(tree_parent_features)
         if (self.__paras.use_semantic_logic_order):
-            semantic_order_features_pooling = self.__max_height_pooling(semantic_order_features)
+            semantic_order_features_pooling = self.__max_feature_pooling(semantic_order_features)
         
         # attention
         if (self.__paras.use_semantic_logic_order):
@@ -158,9 +171,9 @@ class Model:
         batch_cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=self.correct_output, logits=logits)
         self.cross_entropy = tf.reduce_mean(batch_cross_entropy)
         self.optimize = tf.contrib.opt.AdamWOptimizer(weight_decay=self.__paras.weight_decay, learning_rate=self.__paras.learning_rate).minimize(self.cross_entropy)
-
-
-
+        
+        tf.summary.scalar('loss', self.cross_entropy)
+        
     ''' weight initializer '''
     def __initializer(self):
         return tf.truncated_normal_initializer(stddev=0.1)        
@@ -169,8 +182,7 @@ class Model:
     resnet deep CNN
     '''    
     def __deep_CNN(self, tensor, channel_size):
-        loop_time = tf.constant(int(self.__paras.cnn_deepth / 2))
-        
+        loop_time = int(self.__paras.cnn_deepth / 2)
         for i in range(loop_time):
             temp = tf.layers.conv1d(tensor, channel_size , self.__paras.deep_CNN_kernel_size, padding='same')
             temp = tf.nn.relu(temp)
@@ -178,26 +190,12 @@ class Model:
             temp = tf.add_n([temp, tensor])
             tensor = tf.nn.relu(temp)            
         return tensor
-        
-#        count = tf.constant(0)
-#        cond = lambda i, t : tf.less(i, loop_time)       
-#        def __loop_body_deep_CNN(i, t):
-#            temp = tf.layers.conv1d(t, channel_size , self.__paras.deep_CNN_kernel_size, padding='same')
-#            temp = tf.nn.relu(temp)
-#            temp = tf.layers.conv1d(temp, channel_size , self.__paras.deep_CNN_kernel_size, padding='same')
-#            temp = tf.add_n([temp, t])
-#            temp = tf.nn.relu(temp)
-#            i = tf.add(i, 1)
-#            return i, temp
-#        body = __loop_body_deep_CNN
-#        count, tensor = tf.while_loop(cond, body, [count, tensor])
-#        return tensor
     
     '''
     @tensor : [batch_size, tree/nl_length(height), tree/nl_embedding_size(width)]
     @return : [batch_size, tree/nl_embedding_size]
     '''
-    def __max_height_pooling(self, tensor):
+    def __max_feature_pooling(self, tensor):
         height = int(tensor.get_shape()[1])
         width = int(tensor.get_shape()[2])
         tensor_expand = tf.expand_dims(tensor, -1)
@@ -231,3 +229,12 @@ class Model:
         weight_sum = tf.reduce_max(weight_sum, axis=2)            
         return weight_sum
     
+    ''' 
+    @tensor : [batch size, k, tree length, embedding size] (k=2)
+    @return : [batch size, tree length, embedding size]
+    '''
+    def __multi_channel_pooling(self, tensor):
+        height = int(tensor.get_shape()[1])
+        result = tf.nn.max_pool(tensor, ksize=[1, height, 1, 1], strides=[1, 1, 1, 1], padding='VALID')
+        result = tf.reduce_max(result, axis=1)
+        return result

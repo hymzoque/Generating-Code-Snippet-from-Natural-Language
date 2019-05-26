@@ -11,6 +11,7 @@ import ast
 import astunparse
 
 import model
+import data
 from setting import Path
 from data_generator import Generator
 
@@ -179,7 +180,8 @@ class Predict:
                         model.input_ast_grandparent_nods : data_batch[3], # grandparent_list_batch
                         model.input_semantic_units : data_batch[4], # semantic_units_batch
                         model.input_children_of_semantic_units : data_batch[5], # semantic_unit_children_batch
-                        model.keep_prob : 1.0                       
+                        model.keep_prob : 1.0,
+                        model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)              
                         })
         
         return log_predicted_output
@@ -514,6 +516,7 @@ class Predict:
             return Generator.get_ids_from_tree_nodes_vocabulary(nodes, self.__tree_nodes_vocabulary)
 
 if (__name__ == '__main__'):
+    tf.reset_default_graph() # for spyder
     from setting import Parameters
     import sys
     handle = Predict(Parameters.get_paras_from_argv(sys.argv))

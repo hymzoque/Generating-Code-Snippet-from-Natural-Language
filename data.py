@@ -186,4 +186,19 @@ class Data:
     '''
     def get_valid_batches(self):
         return self.__valid_batches
+    
+    
+    ''' '''
+    @staticmethod
+    def __pre_train_weight_process(paras):
+        path = paras.dataset_path + Path.PRE_TRAIN_WEIGHT_PATH
+        Data.pre_train_weight = np.loadtxt(path)
 
+    ''' '''
+    @staticmethod
+    def get_pre_train_weight(paras):
+        if (hasattr(Data, 'pre_train_weight')):
+            return Data.pre_train_weight
+        else:
+            Data.__pre_train_weight_process(paras)
+            return Data.pre_train_weight
