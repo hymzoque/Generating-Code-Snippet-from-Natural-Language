@@ -7,7 +7,10 @@ import numpy as np
 
 from setting import Path
 
+'''
+use node and grandparent to predict parent
 
+'''
 class Pre_train:
     
     def __init__(self, paras):
@@ -22,8 +25,8 @@ class Pre_train:
         with open(self.__paras.dataset_path + Path.PRE_TRAIN_DATA_PATH, 'r', encoding='utf-8') as f:
             pre_train_data = eval(f.read())
         pre_train_data = np.array(pre_train_data)
-        self.__input = pre_train_data[:, 0]
-        self.__label = pre_train_data[:, 1:]
+        self.__input = pre_train_data[:, [0,2]]
+        self.__label = pre_train_data[:, [1]]
         
     def __pre_train(self):
         model = __Model(self.__paras)
@@ -50,22 +53,24 @@ class Pre_train:
     
 '''
 pre train model
+tree-based CBOW
 '''
 class __Model:
     def __init__(self, paras):
-        self.input = tf.placeholder(tf.int32, shape=[None])
-        self.labels = tf.placeholder(tf.int64, shape=[None, 2])
+        self.input = tf.placeholder(tf.int32, shape=[None, 2])
+        self.labels = tf.placeholder(tf.int64, shape=[None, 1])
         self.learning_rate = tf.placeholder(tf.float32)
         self.pre_train_tree_node_embedding = tf.get_variable('pre_train_embedding', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
         
-        self.input_embed = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input)
+        embed = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input)
+        self.input_embed = tf.reduce_mean(embed, axis=1)
         
         self.nce_weights = tf.get_variable('nce_weights', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
         self.nce_biases = tf.get_variable('nce_biases', shape=[paras.tree_node_num], initializer=self.__initializer())
         
         self.sampler = tf.nn.uniform_candidate_sampler(
               true_classes=self.labels,
-              num_true=2,
+              num_true=1,
               num_sampled=64,
               unique=True,
               range_max=paras.tree_node_num)
@@ -76,7 +81,6 @@ class __Model:
                 inputs=self.input_embed,
                 num_sampled=64,
                 num_classes=paras.tree_node_num,
-                num_true=2,
                 sampled_values=self.sampler)
         tf.summary.scalar('loss_pre_train', self.loss)
         self.optimize = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
