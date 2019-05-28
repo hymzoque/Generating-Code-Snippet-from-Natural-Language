@@ -66,6 +66,7 @@ class Parameters_conala:
         
     max_predict_time = tree_len - 2
     predict_beam_size = 10
+    unknwon_log_penalty = 7.2
     short_sentence_penalty = 0.7
         
     dataset_path = Path.CONALA_PATH
@@ -100,6 +101,7 @@ class Parameters_hs:
         
     max_predict_time = tree_len - 2
     predict_beam_size = 10
+    unknwon_log_penalty = 6
     short_sentence_penalty = 0.7
         
     dataset_path = Path.HS_PATH

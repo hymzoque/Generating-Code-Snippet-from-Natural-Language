@@ -132,6 +132,11 @@ class Predict:
                         
                         each_node = self.__invert_tree_nodes_vocabulary[each_id]
                         each_probability = unit_log_predicted_output[each_id]
+                        
+                        # penalty of 'unknwon'
+                        if (each_id == 0):
+                            each_probability -= self.__paras.unknwon_log_penalty
+                        
                         # do a grammar check
                         if not (self.__grammar_no_problem(appendable_layer[0], each_node, appendable_layer[2])):
                             continue
