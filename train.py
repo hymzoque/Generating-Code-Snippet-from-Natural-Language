@@ -22,7 +22,7 @@ class Train:
         data_handle = data.Data(self.__paras)
         nn_model = model.Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
-#            self.__get_ckpt(sess)
+            self.__get_ckpt(sess)
             start = time.time()
             
             self.__train_once(sess, data_handle, nn_model)
