@@ -87,7 +87,7 @@ class Train:
                             model.input_NL : train_batches[count][0],
                             model.input_ast_nodes : train_batches[count][1],
                             model.input_ast_parent_nodes : train_batches[count][2],
-                            model.input_ast_grandparent_nods : train_batches[count][3],
+                            model.input_ast_grandparent_nodes : train_batches[count][3],
                             model.input_semantic_units : train_batches[count][4],
                             model.input_children_of_semantic_units : train_batches[count][5],
                             model.correct_output : train_batches[count][6],
@@ -104,19 +104,19 @@ class Train:
         accuracy = 0
         for count in range(batch_num):
             batch_accuracy = session.run(
-                    [model.accuracy],
+                    model.accuracy,
                     feed_dict={
                             model.input_NL : valid_batches[count][0],
                             model.input_ast_nodes : valid_batches[count][1],
                             model.input_ast_parent_nodes : valid_batches[count][2],
-                            model.input_ast_grandparent_nods : valid_batches[count][3],
+                            model.input_ast_grandparent_nodes : valid_batches[count][3],
                             model.input_semantic_units : valid_batches[count][4],
                             model.input_children_of_semantic_units : valid_batches[count][5],
                             model.correct_output : valid_batches[count][6],
                             model.keep_prob : 1.0,
                             model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)                
                             })
-            accuracy += batch_accuracy[0]
+            accuracy += batch_accuracy
         accuracy /= batch_num
         return accuracy
     
@@ -135,7 +135,7 @@ class Train:
     def __save_ckpt(self, session):
         dir_path = self.__model_dir
         if not os.path.exists(dir_path):
-            os.mkdir(dir_path)
+            os.makedirs(dir_path)
         saver = tf.train.Saver(max_to_keep=1)
         saver.save(session, dir_path + 'model.ckpt')
         

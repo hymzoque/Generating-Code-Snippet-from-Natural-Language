@@ -4,7 +4,6 @@
 """
 import numpy as np
 import os
-import time
 
 from setting import Path
 
@@ -22,7 +21,7 @@ class Data:
       [input_NL],
       [input_ast_nodes],
       [input_ast_parent_nodes],
-      [input_ast_grandparent_nods],
+      [input_ast_grandparent_nodes],
       [input_semantic_units],
       [input_children_of_semantic_units],
       [correct_output] 
@@ -36,11 +35,9 @@ class Data:
         train_data = []
         i = 0
         while (os.path.exists(path + str(i))):
-            t = time.time()
             with open(path + str(i), 'r', encoding='utf-8') as f:
                 train_data.extend(eval(f.read()))
             i += 1
-            print(str(time.time() - t))
         self.__train_data = self.__data_process(train_data)
         
     '''
@@ -138,7 +135,7 @@ class Data:
         [batch_size x input_NL],
         [batch_size x input_ast_nodes],
         [batch_size x input_ast_parent_nodes],
-        [batch_size x input_ast_grandparent_nods],
+        [batch_size x input_ast_grandparent_nodes],
         [batch_size x input_semantic_units],
         [batch_size x input_children_of_semantic_units],
         [batch_size x correct_output],

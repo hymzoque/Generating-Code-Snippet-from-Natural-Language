@@ -95,7 +95,7 @@ class Parameters:
     
 class Parameters_conala:
     nl_len = 32 # max 32
-    tree_len = 256 # max 255
+    tree_len = 255 # max 255
     semantic_units_len = 32 # max 32
     semantic_unit_children_num = 3
     min_vocabulary_count = 5
@@ -113,10 +113,10 @@ class Parameters_conala:
     learning_rate = 1e-4
     weight_decay = 1e-4
         
-    train_batch_size = 64
+    train_batch_size = 128
     valid_batch_size = 256
         
-    max_predict_time = 256
+    max_predict_time = tree_len - 2
     predict_beam_size = 10
     short_sentence_penalty = 0.7
         
@@ -148,7 +148,7 @@ class Parameters_hs:
     train_batch_size = 64
     valid_batch_size = 256
         
-    max_predict_time = 723
+    max_predict_time = tree_len - 2
     predict_beam_size = 10
     short_sentence_penalty = 0.7
         

@@ -23,9 +23,8 @@ class Model:
         self.input_ast_parent_nodes = tf.placeholder(tf.int32, shape=[None, self.__paras.tree_len])
         self.input_ast_grandparent_nodes = tf.placeholder(tf.int32, shape=[None, self.__paras.tree_len])
         # nodes of predicted semantic units
-        if (self.__paras.use_semantic_logic_order):
-            self.input_semantic_units = tf.placeholder(tf.int32, shape=[None, self.__paras.semantic_units_len])
-            self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])
+        self.input_semantic_units = tf.placeholder(tf.int32, shape=[None, self.__paras.semantic_units_len])
+        self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])
         # indexes of correct output
         self.correct_output = tf.placeholder(tf.float32, shape=[None, self.__paras.tree_node_num])
         # keep_prob = 1 - dropout

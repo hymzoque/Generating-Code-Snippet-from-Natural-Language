@@ -43,7 +43,7 @@ class Generator:
         
         # data dir
         if not os.path.exists(self.__data_dir + Path.GENERATED_PATH):
-            os.mkdir(self.__data_dir + Path.GENERATED_PATH)
+            os.makedirs(self.__data_dir + Path.GENERATED_PATH)
         self.__write_nl_vocabulary()
         self.__write_tree_nodes_vocabulary()
         

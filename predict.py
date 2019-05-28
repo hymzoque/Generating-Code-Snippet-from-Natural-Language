@@ -7,6 +7,7 @@ import numpy as np
 import math
 import os
 import time
+import re
 import ast
 import astunparse
 
@@ -48,7 +49,7 @@ class Predict:
             descriptions = self.__read_description()
             
             if not os.path.exists(self.__prediction_dir):
-                os.mkdir(self.__prediction_dir)
+                os.makedirs(self.__prediction_dir)
             for n in range(len(descriptions)):
                 description = descriptions[n]
                 write_path = self.__prediction_dir + str(n)
@@ -58,12 +59,12 @@ class Predict:
     ''' predict one sentence '''
     def __predict_one_sentence(self, description, write_path, session, model):
         # initialize the beam
-        begin_unit = Predict.__Beam_Unit(description, traceable_list=['Module', '{'], 0, 1, self.__tree_nodes_vocabulary)
+        begin_unit = Predict.__Beam_Unit(description, ['ast.Module', '{'], 0, 1, self.__tree_nodes_vocabulary)
         begin_unit.generate_data(self.__paras)
         beam = [begin_unit]
         
         # recoord best result
-        max_log_probability_result = Predict.__Beam_Unit(None, None, -1e10, None)
+        max_log_probability_result = Predict.__Beam_Unit(None, None, -1e10, None, None)
         
         # predicition
         for i in range(self.__paras.max_predict_time):
@@ -97,7 +98,7 @@ class Predict:
                     log_probability_of_end_node = unit_log_predicted_output[1]
                     # if end the log probability is
                     temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras.short_sentence_penalty)
-                    twmp = temp + log_probability_of_end_node
+                    temp = temp + log_probability_of_end_node
                     end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, self.__paras.short_sentence_penalty)
                     # if better result appears, update the best result
                     if (end_log_probability > max_log_probability_result.log_probability):
@@ -112,7 +113,7 @@ class Predict:
                         if (each_id == 1):
                             continue                        
                         
-                        each_node = self.__invert_tree_nodes_vocabulary(each_id)
+                        each_node = self.__invert_tree_nodes_vocabulary[each_id]
                         each_probability = unit_log_predicted_output[each_id]
                         # do a grammar check
                         if not (self.__grammar_no_problem(appendable_layer[0], each_node, appendable_layer[2])):
@@ -172,12 +173,12 @@ class Predict:
                 [beam_unit.semantic_unit_children for beam_unit in beam]]        
         
         log_predicted_output = session.run(
-                [model.log_predicted_output],
+                model.log_predicted_output,
                 feed_dict={
                         model.input_NL : data_batch[0], # desciption_batch
                         model.input_ast_nodes : data_batch[1], # node_list_batch
                         model.input_ast_parent_nodes : data_batch[2], # parent_list_batch
-                        model.input_ast_grandparent_nods : data_batch[3], # grandparent_list_batch
+                        model.input_ast_grandparent_nodes : data_batch[3], # grandparent_list_batch
                         model.input_semantic_units : data_batch[4], # semantic_units_batch
                         model.input_children_of_semantic_units : data_batch[5], # semantic_unit_children_batch
                         model.keep_prob : 1.0,
@@ -451,7 +452,7 @@ class Predict:
             grandparent_list = []
             for i in range(len(self.traceable_list)):
                 node = self.traceable_list[i]
-                if (node == '{' or node == '}'): continue
+                if (node == '{' or node == '}' or node == '<data_point>'): continue
                 # for each node
                 node_list.append(node)
                 # find parent and grandparent from traceable list
@@ -493,11 +494,11 @@ class Predict:
             semantic_unit_children = semantic_unit_children_ids
             
             # fill 0 in spare place(using numpy)
-            self.node_list = np.zeros([self.__paras.tree_len])
-            self.parent_list = np.zeros([self.__paras.tree_len])
-            self.grandparent_list = np.zeros([self.__paras.tree_len])
-            self.semantic_units = np.zeros([self.__paras.semantic_units_len])
-            self.semantic_unit_children = np.zeros([self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])   
+            self.node_list = np.zeros([paras.tree_len])
+            self.parent_list = np.zeros([paras.tree_len])
+            self.grandparent_list = np.zeros([paras.tree_len])
+            self.semantic_units = np.zeros([paras.semantic_units_len])
+            self.semantic_unit_children = np.zeros([paras.semantic_units_len, paras.semantic_unit_children_num])   
             for j in range(len(node_list)):
                 self.node_list[j] = node_list[j]
             for j in range(len(parent_list)):
