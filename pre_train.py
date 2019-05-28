@@ -92,6 +92,7 @@ if (__name__ == '__main__'):
     tf.reset_default_graph() # for spyder
     from setting import Parameters
     import sys    
-    handle = Pre_train(Parameters.get_paras_from_argv(sys.argv))
+    handle = Pre_train(Parameters.get_conala_paras())
+    handle = Pre_train(Parameters.get_hs_paras())
 
     
