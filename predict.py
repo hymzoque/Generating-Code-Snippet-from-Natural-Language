@@ -7,6 +7,7 @@ import numpy as np
 import math
 import os
 import time
+import datetime
 import re
 import ast
 import astunparse
@@ -31,6 +32,8 @@ class Predict:
     ''' test prediction time for 1 sentence '''
     def test_predict(self):
         nn_model = model.Model(self.__paras)
+        self.log = open('predict_log', mode='a')
+        self.log.write('test predicting\n')
         with tf.Session(config=self.__gpu_config()) as sess:
             # restore model
             self.__restore_ckpt(sess)
@@ -41,10 +44,18 @@ class Predict:
             write_path = 'test_prediciton'
             self.__predict_one_sentence(description, write_path, sess, nn_model)
             print('generate time used : ' + str(time.time() - start))
+        self.log.write('\n')
+        self.log.close()
             
     ''' predict method '''
     def predict(self):
         nn_model = model.Model(self.__paras)
+        self.log = open('predict_log', mode='a')
+        self.log.write(str(datetime.datetime.now()) + '\n')
+        self.log.write('start predicting\n')
+        self.log.write('dataset=' + str(self.__paras.dataset_path))
+        self.log.write(', use_pre_train=' + str(self.__paras.use_pre_train))
+        self.log.write(', use_semantic=' + str(self.__paras.use_semantic_logic_order) + '\n')
         with tf.Session(config=self.__gpu_config()) as sess:
             # restore model
             self.__restore_ckpt(sess)
@@ -56,8 +67,11 @@ class Predict:
             for n in range(len(descriptions)):
                 description = descriptions[n]
                 write_path = self.__prediction_dir + str(n)
+                self.log.write('num : ' + str(n) + '\n')
+                self.log.write('description : ' + str(description) + '\n')
                 self.__predict_one_sentence(description, write_path, sess, nn_model)
-        
+        self.log.write('\n')
+        self.log.close()
     
     ''' predict one sentence '''
     def __predict_one_sentence(self, description, write_path, session, model):
@@ -106,7 +120,7 @@ class Predict:
                     # if better result appears, update the best result
                     if (end_log_probability > max_log_probability_result.log_probability):
                         max_log_probability_result = Predict.__Beam_Unit(description, unit_traceable_list[:], end_log_probability, beam_unit.predicted_nodes_num + 1, self.__tree_nodes_vocabulary)
-                    # todo predict log
+                        self.log.write(str(end_log_probability) + ' ')
                 
                 # add to new beam
                 # for each appendable layer, 
@@ -153,13 +167,22 @@ class Predict:
             ''' generate new beam data '''
             for beam_unit in beam:
                 beam_unit.generate_data(self.__paras)
-            
+        
+        self.log.write('\n')
+        self.log.write(str(max_log_probability_result.traceable_list) + '\n')            
         ''' generate and write out the code '''
-        # code
-        code = self.__traceable_list_to_code(max_log_probability_result.traceable_list)
-        # write out
-        with open(write_path, 'w', encoding='utf-8') as f:
-            f.write(code)
+        try:
+            # code
+            code = self.__traceable_list_to_code(max_log_probability_result.traceable_list)
+            # write out
+            with open(write_path, 'w', encoding='utf-8') as f:
+                f.write(code)
+            self.log.write('output : ' + str(code))
+        except:
+            self.log.write('unparse error:\n')
+            self.log.write(str(sys.exc_info()))
+        self.log.write('\n\n')
+
         
     '''
     batch/beam predict for beam search
@@ -520,9 +543,8 @@ class Predict:
             return Generator.get_ids_from_tree_nodes_vocabulary(nodes, self.__tree_nodes_vocabulary)
 
 if (__name__ == '__main__'):
-    tf.reset_default_graph() # for spyder
+    tf.reset_default_graph()
     from setting import Parameters
     import sys
     handle = Predict(Parameters.get_paras_from_argv(sys.argv))
-    #handle.test_predict()
     handle.predict()

@@ -61,12 +61,13 @@ class Train:
                 
                 log.write('epoch ' + str(train_loop + 1) + ' :\n')
                 log.write('accuracy is : ' + str(valid_accuracy) + '\n')
-                log.write('    time used : ' + str(end_time - start_time) + '\n\n')
+                log.write('    time used : ' + str(end_time - start_time) + '\n')
                 # save model if accuracy get better
                 if (valid_accuracy > best_accuracy):
                     self.__save_ckpt(sess)
                     best_accuracy = valid_accuracy
-                
+                    log.write('better result found\n')
+                log.write('\n')
                 log.flush()
         log.write(str(datetime.datetime.now()) + '\n')
         log.write('end training\n\n')
@@ -145,9 +146,8 @@ class Train:
         
         
 if (__name__ == '__main__'):
-    tf.reset_default_graph() # for spyder
+    tf.reset_default_graph()
     from setting import Parameters
     import sys
     handle = Train(Parameters.get_paras_from_argv(sys.argv))
-    #handle.test_train()
     handle.train()
