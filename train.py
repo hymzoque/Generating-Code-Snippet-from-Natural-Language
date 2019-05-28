@@ -17,6 +17,9 @@ class Train:
         self.__paras = paras
         self.__model_dir = Path.get_model_path(paras)
         
+        if (paras.test):
+            self.train = self.test_train
+        
     ''' test the training and valid time of one batch '''
     def test_train(self):
         data_handle = data.Data(self.__paras)

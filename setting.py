@@ -40,58 +40,6 @@ class Path:
         path += '/'
         return path
     
-
-class Parameters:
-    @staticmethod
-    def get_conala_paras():
-        return Parameters_conala()
-    @staticmethod
-    def get_hs_paras():
-        return Parameters_hs()
-    
-    '''
-    -c conala dataset (default)
-    -h hearthstone dataset
-    -p pre_train (default)
-    -np no pre_train
-    -s semantic_logic_order (default)
-    -ns no semantic_logic_order
-    '''
-    @staticmethod
-    def get_paras_from_argv(argv):
-        if ('-h' in argv):
-            print('using hearthstone dataset')
-            paras = Parameters_hs()
-        elif ('-c' in argv):
-            print('using conala dataset')
-            paras = Parameters_conala()
-        else:
-            print('using conala dataset(default)')
-            paras = Parameters_conala()
-        
-        if ('-np' in argv):
-            print('not using pre train')
-            paras.use_pre_train = False
-        elif ('-p' in argv):
-            print('using pre train')
-            paras.use_pre_train = True
-        else:
-            print('not using pre train(default)')
-            paras.use_pre_train = False
-            
-        if ('-ns' in argv):
-            print('not using semantic logic order')
-            paras.use_semantic_logic_order = False
-        elif ('-s' in argv):
-            print('using semantic logic order')
-            paras.use_semantic_logic_order = True
-        else:
-            print('not using semantic logic order(default)')
-            paras.use_semantic_logic_order = False
-        
-        return paras
-    
-    
     
 class Parameters_conala:
     nl_len = 32 # max 32
@@ -123,7 +71,9 @@ class Parameters_conala:
     dataset_path = Path.CONALA_PATH
         
     use_pre_train = True
-    use_semantic_logic_order = True   
+    use_semantic_logic_order = True
+    
+    test = False
      
 class Parameters_hs:
     nl_len = 38 # max 38
@@ -156,3 +106,62 @@ class Parameters_hs:
         
     use_pre_train = True
     use_semantic_logic_order = True        
+    
+    test = False
+
+class Parameters:
+    @staticmethod
+    def get_conala_paras():
+        return Parameters_conala()
+    @staticmethod
+    def get_hs_paras():
+        return Parameters_hs()
+    
+    '''
+    -c conala dataset (default)
+    -h hearthstone dataset
+    -p pre_train (default)
+    -np no pre_train
+    -s semantic_logic_order (default)
+    -ns no semantic_logic_order
+    '''
+    @staticmethod
+    def get_paras_from_argv(argv):            
+        if ('-h' in argv):
+            print('using hearthstone dataset')
+            paras = Parameters_hs()
+        elif ('-c' in argv):
+            print('using conala dataset')
+            paras = Parameters_conala()
+        else:
+            print('using conala dataset(default)')
+            paras = Parameters_conala()
+        
+        if ('-np' in argv):
+            print('not using pre train')
+            paras.use_pre_train = False
+        elif ('-p' in argv):
+            print('using pre train')
+            paras.use_pre_train = True
+        else:
+            print('not using pre train(default)')
+            paras.use_pre_train = False
+            
+        if ('-ns' in argv):
+            print('not using semantic logic order')
+            paras.use_semantic_logic_order = False
+        elif ('-s' in argv):
+            print('using semantic logic order')
+            paras.use_semantic_logic_order = True
+        else:
+            print('not using semantic logic order(default)')
+            paras.use_semantic_logic_order = False
+            
+        if ('test' in argv):
+            print('test mod')
+            paras.test = True        
+        else:
+            paras.test = False
+
+        return paras
+    

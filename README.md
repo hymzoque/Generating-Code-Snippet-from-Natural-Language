@@ -12,9 +12,9 @@ conda install -c conda-forge/label/cf201901 astunparse
 generate data  
   sh init.sh  
 train  
-  python3 train.py -c(default)|-h -p(default)|-np -s(default)|-ns  
+  python3 train.py -c(default)|-h -p|-np(default) -s|-ns(default) test  
 predict  
-  python3 predict.py -c|-h -p|-np -s|-ns  
+  python3 predict.py -c|-h -p|-np -s|-ns test  
 evaluate  
   python3 evaluate.py -c|-h -p|-np -s|-ns  
 
@@ -24,3 +24,4 @@ evaluate
 -np : not using pre train  
 -s : using semantic logic order  
 -ns : not using semantic logic order  
+test : using test mode

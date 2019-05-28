@@ -24,6 +24,9 @@ class Predict:
         self.__prediction_dir = Path.get_prediction_path(paras)
         self.__beam_size = self.__paras.predict_beam_size
         self.__read_vocabulary()
+        
+        if (paras.test):
+            self.predict = self.test_predict
     
     ''' test prediction time for 1 sentence '''
     def test_predict(self):
@@ -35,7 +38,7 @@ class Predict:
             start = time.time()
             descriptions = self.__read_description()
             description = descriptions[0]
-            write_path = 'test_prediciton/0'
+            write_path = 'test_prediciton'
             self.__predict_one_sentence(description, write_path, sess, nn_model)
             print('generate time used : ' + str(time.time() - start))
             
