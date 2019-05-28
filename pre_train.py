@@ -29,7 +29,7 @@ class Pre_train:
         self.__label = pre_train_data[:, [1]]
         
     def __pre_train(self):
-        model = __Model(self.__paras)
+        model = Pre_train.__Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
             train_times = 1000
             start_alpha = 0.025
@@ -51,47 +51,46 @@ class Pre_train:
         config.gpu_options.allow_growth = True
         return config
     
-'''
-pre train model
-tree-based CBOW
-'''
-class __Model:
-    def __init__(self, paras):
-        self.input = tf.placeholder(tf.int32, shape=[None, 2])
-        self.labels = tf.placeholder(tf.int64, shape=[None, 1])
-        self.learning_rate = tf.placeholder(tf.float32)
-        self.pre_train_tree_node_embedding = tf.get_variable('pre_train_embedding', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
-        
-        embed = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input)
-        self.input_embed = tf.reduce_mean(embed, axis=1)
-        
-        self.nce_weights = tf.get_variable('nce_weights', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
-        self.nce_biases = tf.get_variable('nce_biases', shape=[paras.tree_node_num], initializer=self.__initializer())
-        
-        self.sampler = tf.nn.uniform_candidate_sampler(
-              true_classes=self.labels,
-              num_true=1,
-              num_sampled=64,
-              unique=True,
-              range_max=paras.tree_node_num)
-        self.loss = tf.nn.nce_loss(
-                weights=self.nce_weights,
-                biases=self.nce_biases,
-                labels=self.labels,
-                inputs=self.input_embed,
-                num_sampled=64,
-                num_classes=paras.tree_node_num,
-                sampled_values=self.sampler)
-        tf.summary.scalar('loss_pre_train', self.loss)
-        self.optimize = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
+    '''
+    pre train model
+    tree-based CBOW
+    '''
+    class __Model:
+        def __init__(self, paras):
+            self.input = tf.placeholder(tf.int32, shape=[None, 2])
+            self.labels = tf.placeholder(tf.int64, shape=[None, 1])
+            self.learning_rate = tf.placeholder(tf.float32)
+            self.pre_train_tree_node_embedding = tf.get_variable('pre_train_embedding', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
 
-    def __initializer(self):
-        return tf.truncated_normal_initializer(stddev=0.1)   
+            embed = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input)
+            self.input_embed = tf.reduce_mean(embed, axis=1)
+
+            self.nce_weights = tf.get_variable('nce_weights', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
+            self.nce_biases = tf.get_variable('nce_biases', shape=[paras.tree_node_num], initializer=self.__initializer())
+
+            self.sampler = tf.nn.uniform_candidate_sampler(
+                  true_classes=self.labels,
+                  num_true=1,
+                  num_sampled=64,
+                  unique=True,
+                  range_max=paras.tree_node_num)
+            self.loss = tf.nn.nce_loss(
+                    weights=self.nce_weights,
+                    biases=self.nce_biases,
+                    labels=self.labels,
+                    inputs=self.input_embed,
+                    num_sampled=64,
+                    num_classes=paras.tree_node_num,
+                    sampled_values=self.sampler)
+            tf.summary.scalar('loss_pre_train', self.loss)
+            self.optimize = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
+
+        def __initializer(self):
+            return tf.truncated_normal_initializer(stddev=0.1)   
 
 if (__name__ == '__main__'):
     tf.reset_default_graph() # for spyder
     from setting import Parameters
-    import sys    
     handle = Pre_train(Parameters.get_conala_paras())
     handle = Pre_train(Parameters.get_hs_paras())
 
