@@ -148,7 +148,7 @@ class Parameters_hs:
     train_batch_size = 64
     valid_batch_size = 256
         
-    max_predict_time = 256
+    max_predict_time = 723
     predict_beam_size = 10
     short_sentence_penalty = 0.7
         
