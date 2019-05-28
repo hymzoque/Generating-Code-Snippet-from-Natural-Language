@@ -41,6 +41,9 @@ class Train:
         log = open('train_log', mode='a')
         log.write(str(datetime.datetime.now()) + '\n')
         log.write('start training\n')
+        log.write('dataset=' + str(self.__paras.dataset_path))
+        log.write(', use_pre_train=' + str(self.__paras.use_pre_train))
+        log.write(', use_semantic=' + str(self.__paras.use_semantic_logic_order) + '\n')
         log.write('training for ' + str(self.__paras.train_times) + ' times\n')
         with tf.Session(config=self.__gpu_config()) as sess:
             # model file
