@@ -31,6 +31,7 @@ class Pre_train:
     def __pre_train(self):
         model = Pre_train.__Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
+            sess.run(tf.global_variables_initializer())
             train_times = 1000
             start_alpha = 0.025
             stop_alpha = 0.0001
@@ -39,7 +40,7 @@ class Pre_train:
                 sess.run(model.optimize, feed_dict={
                         model.learning_rate : learning_rate,
                         model.input : self.__input,
-                        model.label : self.__label})
+                        model.labels : self.__label})
             self.__pre_train_weight = sess.run(model.pre_train_tree_node_embedding)
     
     def __write_pre_train_weight(self):
@@ -89,9 +90,10 @@ class Pre_train:
             return tf.truncated_normal_initializer(stddev=0.1)   
 
 if (__name__ == '__main__'):
-    tf.reset_default_graph() # for spyder
     from setting import Parameters
+    tf.reset_default_graph()
     handle = Pre_train(Parameters.get_conala_paras())
+    tf.reset_default_graph()
     handle = Pre_train(Parameters.get_hs_paras())
 
     
