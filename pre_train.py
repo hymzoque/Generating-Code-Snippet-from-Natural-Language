@@ -32,6 +32,7 @@ class Pre_train:
         model = Pre_train.__Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
             sess.run(tf.global_variables_initializer())
+            # may up the alpha
             train_times = 10
             start_alpha = 0.025
             stop_alpha = 0.0001
@@ -58,18 +59,16 @@ class Pre_train:
     '''
     class __Model:
         def __init__(self, paras):
-            regularizer = tf.contrib.layers.l2_regularizer(1e-4)
-            
             self.input = tf.placeholder(tf.int32, shape=[None, 2])
             self.labels = tf.placeholder(tf.int64, shape=[None, 1])
             self.learning_rate = tf.placeholder(tf.float32)
-            self.pre_train_tree_node_embedding = regularizer(tf.get_variable('pre_train_embedding', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer()))
+            self.pre_train_tree_node_embedding = tf.get_variable('pre_train_embedding', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
 
             embed = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input)
             self.input_embed = tf.reduce_mean(embed, axis=1)
 
-            self.nce_weights = regularizer(tf.get_variable('nce_weights', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer()))
-            self.nce_biases = regularizer(tf.get_variable('nce_biases', shape=[paras.tree_node_num], initializer=self.__initializer()))
+            self.nce_weights = tf.get_variable('nce_weights', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
+            self.nce_biases = tf.get_variable('nce_biases', shape=[paras.tree_node_num], initializer=self.__initializer())
             
             self.sampler = tf.nn.uniform_candidate_sampler(
                   true_classes=self.labels,
@@ -77,14 +76,14 @@ class Pre_train:
                   num_sampled=64,
                   unique=True,
                   range_max=paras.tree_node_num)
-            self.loss = tf.nn.nce_loss(
+            self.loss = tf.reduce_mean(tf.nn.nce_loss(
                     weights=self.nce_weights,
                     biases=self.nce_biases,
                     labels=self.labels,
                     inputs=self.input_embed,
                     num_sampled=64,
                     num_classes=paras.tree_node_num,
-                    sampled_values=self.sampler)
+                    sampled_values=self.sampler))
 #            tf.summary.scalar('loss_pre_train', self.loss)
             self.optimize = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
 
