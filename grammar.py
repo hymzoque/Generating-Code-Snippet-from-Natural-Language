@@ -24,7 +24,7 @@ class Grammar:
         
         # ast Node as parent
         if ('ast.' in parent):
-            meth = getattr(self, '_' + parent.split('.', '_'))
+            meth = getattr(self, '_' + parent.replace('.', '_'))
             return meth(child, position)
         
         # Name and Str must have string as first child(not strict)
