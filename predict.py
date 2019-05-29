@@ -8,7 +8,6 @@ import math
 import os
 import time
 import datetime
-import re
 import ast
 import astunparse
 
@@ -17,10 +16,12 @@ import data
 from setting import Path
 from setting import tokenize
 from data_generator import Generator
+from grammar import Grammar
 
 class Predict:
     def __init__(self, paras):
         self.__paras = paras
+        self.__grammar_checker = Grammar()
         self.__model_dir = Path.get_model_path(paras)
         self.__data_dir = self.__paras.dataset_path
         self.__prediction_dir = Path.get_prediction_path(paras)
@@ -29,6 +30,7 @@ class Predict:
         
         if (paras.test):
             self.predict = self.test_predict
+            
     
     ''' test prediction time for 1 sentence '''
     def test_predict(self):
@@ -139,7 +141,7 @@ class Predict:
                             each_probability -= self.__paras.unknwon_log_penalty
                         
                         # do a grammar check
-                        if not (self.__grammar_no_problem(appendable_layer[0], each_node, appendable_layer[2])):
+                        if not (self.__grammar_checker.grammar_no_problem(appendable_layer[0], each_node, appendable_layer[2])):
                             continue
                         # new traceable list
                         new_traceable_list = unit_traceable_list[:]
@@ -299,25 +301,6 @@ class Predict:
         return appendable_layers
     
     '''
-    check grammar by parent, child and position of previous child(position of this child - 1)
-    may need to extend
-    '''
-    def __grammar_no_problem(self, parent, child, position):
-        # <List> can not have child <List>
-        if (parent == '<List>' and child == '<List>'):
-            return False
-        # <List> can not have string as child(not strict)
-        
-        # Name and Str must have string as first child(not strict)
-        
-        # ClassDef or FunctionDef must have string as first child(name)
-        if ((parent == 'ast.ClassDef' or parent == 'ast.FunctionDef') and position == -1):
-            if (child == '<List>' or child == '<Empty_List>' or child == '<Empty_Node>' or 'ast.' in child):
-                return False
-        return True
-               
-    
-    '''
     traceable list -> AST -> code
     '''
     def __traceable_list_to_code(self, traceable_list):
@@ -434,8 +417,6 @@ class Predict:
             for data_unit in test_data:
                 description = data_unit['rewritten_intent']
                 if (description == 'null') : continue
-#                description = re.sub('[\'\"`]', '', description).strip()
-#                description = description.split(' ')
                 description = tokenize(description)
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
                 description_np = np.zeros([self.__paras.nl_len])
@@ -451,8 +432,6 @@ class Predict:
             
             for description in test_in:
                 if (description == ''): continue
-#                description = re.sub(r'<b>|</b>|\.|,|;|\$|#|<i>|</i>|\(|\)', '', description).strip()
-#                description = description.split(' ')
                 description = tokenize(description)
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
                 description_np = np.zeros([self.__paras.nl_len])
