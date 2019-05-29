@@ -513,6 +513,8 @@ class Predict:
             
             # semantic_units & semantic_unit_children
             semantic_units, semantic_unit_children = Generator.process_semantic_unit(self.traceable_list, paras)
+            semantic_units = semantic_units[:paras.semantic_units_len]
+            semantic_unit_children = semantic_unit_children[:paras.semantic_units_len]
             
             # get ids
             node_list = self.__get_ids_from_tree_nodes_vocabulary(node_list)

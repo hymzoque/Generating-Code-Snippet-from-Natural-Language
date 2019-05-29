@@ -40,6 +40,12 @@ class Path:
         path += '/'
         return path
     
+    @staticmethod
+    def get_name_scope(paras):
+        n = 'conala_' if (paras.dataset_path == Path.CONALA_PATH) else 'hs_'
+        n += 'p_' if (paras.use_pre_train) else 'np_'
+        n += 's' if (paras.use_semantic_logic_order) else 'ns'
+        return n
     
 class Parameters_conala:
     nl_len = 32 # max 32
