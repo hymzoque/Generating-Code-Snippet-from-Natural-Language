@@ -48,7 +48,7 @@ class Train:
         log.write(', use_pre_train=' + str(self.__paras.use_pre_train))
         log.write(', use_semantic=' + str(self.__paras.use_semantic_logic_order) + '\n')
         log.write('training for ' + str(self.__paras.train_times) + ' times\n')
-        with tf.Session(config=self.__gpu_config()) as sess:
+        with tf.Session(config=self.__gpu_config()) as sess, tf.name_scope(Path.get_name_scope(self.__paras)):
             # model file
             self.__get_ckpt(sess)
             # train loop
