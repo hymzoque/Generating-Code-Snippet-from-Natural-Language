@@ -16,8 +16,6 @@ class Path:
     PRE_TRAIN_WEIGHT_PATH = GENERATED_PATH + 'pre_train_weight.txt'
     STATISTICS_PATH = GENERATED_PATH + 'statistics'
     
-
-    
     __MODEL_PATH = 'model/'
     '''
     '''
