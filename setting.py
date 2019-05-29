@@ -16,15 +16,15 @@ class Path:
     PRE_TRAIN_WEIGHT_PATH = GENERATED_PATH + 'pre_train_weight.txt'
     STATISTICS_PATH = GENERATED_PATH + 'statistics'
     
+
+    
     __MODEL_PATH = 'model/'
     '''
     '''
     @staticmethod
     def get_model_path(paras):
         path = Path.__MODEL_PATH
-        path += 'conala_' if (paras.dataset_path == Path.CONALA_PATH) else 'hs_'
-        path += 'p_' if (paras.use_pre_train) else 'np_'
-        path += 's' if (paras.use_semantic_logic_order) else 'ns'
+        path += Path.get_path_scope(paras)
         path += '/'
         return path
     
@@ -34,14 +34,20 @@ class Path:
     @staticmethod
     def get_prediction_path(paras):
         path = Path.__PREDICTION_PATH
-        path += 'conala_' if (paras.dataset_path == Path.CONALA_PATH) else 'hs_'
-        path += 'p_' if (paras.use_pre_train) else 'np_'
-        path += 's' if (paras.use_semantic_logic_order) else 'ns'
+        path += Path.get_path_scope(paras)
+        path += '/'
+        return path
+    
+    __SUMMARY_PATH = 'summary/'    
+    @staticmethod
+    def get_summary_path(paras):
+        path = Path.__SUMMARY_PATH
+        path += Path.get_path_scope(paras)
         path += '/'
         return path
     
     @staticmethod
-    def get_name_scope(paras):
+    def get_path_scope(paras):
         n = 'conala_' if (paras.dataset_path == Path.CONALA_PATH) else 'hs_'
         n += 'p_' if (paras.use_pre_train) else 'np_'
         n += 's' if (paras.use_semantic_logic_order) else 'ns'

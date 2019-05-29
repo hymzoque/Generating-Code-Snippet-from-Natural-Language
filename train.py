@@ -48,15 +48,27 @@ class Train:
         log.write(', use_pre_train=' + str(self.__paras.use_pre_train))
         log.write(', use_semantic=' + str(self.__paras.use_semantic_logic_order) + '\n')
         log.write('training for ' + str(self.__paras.train_times) + ' times\n')
-        with tf.Session(config=self.__gpu_config()) as sess, tf.name_scope(Path.get_name_scope(self.__paras)):
+        
+
+        
+        with tf.Session(config=self.__gpu_config()) as sess:
             # model file
             self.__get_ckpt(sess)
+            # summary writer
+            summary_path = Path.get_summary_path(self.__paras)
+            if not os.path.exists(summary_path):
+                os.makedirs(summary_path)
+            train_writer = tf.summary.FileWriter(summary_path + 'train', sess.graph)
+            test_writer = tf.summary.FileWriter(summary_path + 'test', sess.graph)
             # train loop
             best_accuracy = 0
             for train_loop in range(self.__paras.train_times):
                 start_time = time.time()
-                self.__train_once(sess, data_handle, nn_model)
-                valid_accuracy = self.__valid(sess, data_handle, nn_model)
+                train_summary = self.__train_once(sess, data_handle, nn_model)
+                train_writer.add_summary(train_summary, train_loop)
+                
+                valid_accuracy, test_summary = self.__valid(sess, data_handle, nn_model)
+                test_writer.add_summary(test_summary, train_loop)
                 end_time = time.time()
                 
                 log.write('epoch ' + str(train_loop + 1) + ' :\n')
@@ -68,7 +80,8 @@ class Train:
                     best_accuracy = valid_accuracy
                     log.write('better result found\n')
                 log.write('\n')
-                log.flush()
+                log.flush()            
+            
         log.write(str(datetime.datetime.now()) + '\n')
         log.write('end training\n\n')
         log.close()        
@@ -85,8 +98,8 @@ class Train:
         train_batches = data_handle.get_train_batches()
         batch_num = len(train_batches)
         for count in range(batch_num):
-            model.optimize.run(
-                    session=session,
+            _, summary = session.run(
+                    [model.optimize, model.merged],
                     feed_dict={
                             model.input_NL : train_batches[count][0],
                             model.input_ast_nodes : train_batches[count][1],
@@ -99,6 +112,7 @@ class Train:
                             model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)
                             }
                     )
+        return summary
     
     ''' '''
     def __valid(self, session, data_handle, model):
@@ -107,8 +121,8 @@ class Train:
         
         accuracy = 0
         for count in range(batch_num):
-            batch_accuracy = session.run(
-                    model.accuracy,
+            batch_accuracy, summary = session.run(
+                    [model.accuracy, model.merged],
                     feed_dict={
                             model.input_NL : valid_batches[count][0],
                             model.input_ast_nodes : valid_batches[count][1],
@@ -122,7 +136,7 @@ class Train:
                             })
             accuracy += batch_accuracy
         accuracy /= batch_num
-        return accuracy
+        return accuracy, summary
     
     ''' restore or create new checkpoint '''
     def __get_ckpt(self, session):

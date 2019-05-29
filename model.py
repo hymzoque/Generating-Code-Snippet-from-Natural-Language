@@ -172,6 +172,7 @@ class Model:
         self.optimize = tf.contrib.opt.AdamWOptimizer(weight_decay=self.__paras.weight_decay, learning_rate=self.__paras.learning_rate).minimize(self.cross_entropy)
         
         tf.summary.scalar('loss', self.cross_entropy)
+        self.merged = tf.summary.merge_all()
         
     ''' weight initializer '''
     def __initializer(self):

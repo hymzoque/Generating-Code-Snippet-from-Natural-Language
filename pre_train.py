@@ -83,7 +83,7 @@ class Pre_train:
                     num_sampled=64,
                     num_classes=paras.tree_node_num,
                     sampled_values=self.sampler)
-            tf.summary.scalar('loss_pre_train', self.loss)
+#            tf.summary.scalar('loss_pre_train', self.loss)
             self.optimize = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
 
         def __initializer(self):
