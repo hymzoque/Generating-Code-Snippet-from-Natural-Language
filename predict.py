@@ -15,6 +15,7 @@ import astunparse
 import model
 import data
 from setting import Path
+from setting import tokenize
 from data_generator import Generator
 
 class Predict:
@@ -433,8 +434,9 @@ class Predict:
             for data_unit in test_data:
                 description = data_unit['rewritten_intent']
                 if (description == 'null') : continue
-                description = re.sub('[\'\"`]', '', description).strip()
-                description = description.split(' ')
+#                description = re.sub('[\'\"`]', '', description).strip()
+#                description = description.split(' ')
+                description = tokenize(description)
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
                 description_np = np.zeros([self.__paras.nl_len])
                 for i in range(len(description_ids)):
@@ -449,8 +451,9 @@ class Predict:
             
             for description in test_in:
                 if (description == ''): continue
-                description = re.sub(r'<b>|</b>|\.|,|;|\$|#|<i>|</i>|\(|\)', '', description).strip()
-                description = description.split(' ')
+#                description = re.sub(r'<b>|</b>|\.|,|;|\$|#|<i>|</i>|\(|\)', '', description).strip()
+#                description = description.split(' ')
+                description = tokenize(description)
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
                 description_np = np.zeros([self.__paras.nl_len])
                 for i in range(len(description_ids)):

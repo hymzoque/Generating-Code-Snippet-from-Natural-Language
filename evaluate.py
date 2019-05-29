@@ -2,10 +2,9 @@
 """
 
 """
-import re
-
 import bleu_score
 from setting import Path
+from setting import tokenize
 
 class Evaluate:
     def __init__(self, paras):
@@ -53,8 +52,8 @@ class Evaluate:
         self.__bleus = []
         for i in range(len(self.__correct_code)):
             self.__bleus.append(bleu_score.compute_bleu(
-                    reference_corpus=self.__tokenize(self.__correct_code[i]), 
-                    translation_corpus=self.__tokenize(self.__predicted_code[i]))[0])
+                    reference_corpus=tokenize(self.__correct_code[i]), 
+                    translation_corpus=tokenize(self.__predicted_code[i]))[0])
             
         mean_bleu = sum(self.__bleus) / len(self.__bleus)
         
@@ -66,22 +65,6 @@ class Evaluate:
                 f.write('predict : ' + self.__predicted_code[i] + '\n')
                 f.write('bleu    : ' + str(self.__bleus[i]) + '\n\n')
             f.write('mean bleu : ' + str(mean_bleu))
-            
-    
-    '''
-    from https://github.com/conala-corpus/conala-baseline/blob/master/eval/conala_eval.py 
-    tokenize_for_bleu_eval()
-    '''
-    def __tokenize(self, code):
-        code = re.sub(r'([^A-Za-z0-9_])', r' \1 ', code)
-        code = re.sub(r'([a-z])([A-Z])', r'\1 \2', code)
-        code = re.sub(r'\s+', ' ', code)
-        code = code.replace('"', '`')
-        code = code.replace('\'', '`')
-        tokens = [t for t in code.split(' ') if t]
-
-        return tokens
-    
     
 if (__name__ == '__main__'):
     from setting import Parameters

@@ -48,15 +48,15 @@ class Path:
         return n
     
 class Parameters_conala:
-    nl_len = 32 # max 32
+    nl_len = 62 # max 62
     tree_len = 255 # max 255
     semantic_units_len = 32 # max 32
     semantic_unit_children_num = 3
-    min_vocabulary_count = 5
+    min_vocabulary_count = 4
         
-    vocabulary_num = 636
+    vocabulary_num = 836
     vocabulary_embedding_size = 64
-    tree_node_num = 469
+    tree_node_num = 565
     tree_node_embedding_size = 64
     cnn_deepth = 20
     deep_CNN_kernel_size = 2
@@ -72,26 +72,26 @@ class Parameters_conala:
         
     max_predict_time = tree_len - 2
     predict_beam_size = 10
-    unknwon_log_penalty = 7.2
-    short_sentence_penalty = 0.7
+    unknwon_log_penalty = 6
+    short_sentence_penalty = 0.4
         
     dataset_path = Path.CONALA_PATH
         
-    use_pre_train = True
-    use_semantic_logic_order = True
+    use_pre_train = False
+    use_semantic_logic_order = False
     
     test = False
      
 class Parameters_hs:
-    nl_len = 38 # max 38
+    nl_len = 76 # max 76
     tree_len = 723 # max 723
     semantic_units_len = 75 # max 75
     semantic_unit_children_num = 3
-    min_vocabulary_count = 3
+    min_vocabulary_count = 2
         
-    vocabulary_num = 311
+    vocabulary_num = 462
     vocabulary_embedding_size = 64
-    tree_node_num = 391
+    tree_node_num = 625
     tree_node_embedding_size = 64
     cnn_deepth = 20
     deep_CNN_kernel_size = 2
@@ -107,13 +107,13 @@ class Parameters_hs:
         
     max_predict_time = tree_len - 2
     predict_beam_size = 10
-    unknwon_log_penalty = 6
+    unknwon_log_penalty = 5
     short_sentence_penalty = 0.7
         
     dataset_path = Path.HS_PATH
         
-    use_pre_train = True
-    use_semantic_logic_order = True        
+    use_pre_train = False
+    use_semantic_logic_order = False        
     
     test = False
 
@@ -172,4 +172,18 @@ class Parameters:
             paras.test = False
 
         return paras
-    
+
+import re
+'''
+from https://github.com/conala-corpus/conala-baseline/blob/master/eval/conala_eval.py 
+tokenize_for_bleu_eval()
+'''
+def tokenize(code):
+    code = re.sub(r'([^A-Za-z0-9_])', r' \1 ', code)
+    code = re.sub(r'([a-z])([A-Z])', r'\1 \2', code)
+    code = re.sub(r'\s+', ' ', code)
+    code = code.replace('"', '`')
+    code = code.replace('\'', '`')
+    tokens = [t for t in code.split(' ') if t]
+    return tokens
+  

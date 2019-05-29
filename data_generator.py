@@ -10,6 +10,7 @@ import json
 import os
 
 from setting import Path
+from setting import tokenize
 
 class Generator:
     def __init__(self, paras):
@@ -114,16 +115,17 @@ class Generator:
                 description = data_unit['rewritten_intent']
                 # skip the null description
                 if (description == 'null') : continue
-                # delete the ' " ` 
-                description = re.sub('[\'\"`]', '', description).strip()
-                description = description.split(' ')
+#                # delete the ' " ` 
+#                description = re.sub('[\'\"`]', '', description).strip()
+#                description = description.split(' ')
+                description = tokenize(description)
                 ast_root = ast.parse(data_unit['snippet'])
                 yield description, ast_root 
         def __data_iter_hs(self):
             for description, code in self.__data_read_hs:
-                description = re.sub(r'<b>|</b>|\.|,|;|\$|#|<i>|</i>|\(|\)', '', description).strip()
-                description = description.split(' ')
-                
+#                description = re.sub(r'<b>|</b>|\.|,|;|\$|#|<i>|</i>|\(|\)', '', description).strip()
+#                description = description.split(' ')
+                description = tokenize(description)
                 code = code.replace('§', '\n')
                 code = code.replace('\ ', '')
                 ast_root = ast.parse(code)
