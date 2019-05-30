@@ -33,16 +33,16 @@ class Pre_train:
         with tf.Session(config=self.__gpu_config()) as sess:
             sess.run(tf.global_variables_initializer())
             # may up the alpha
-            train_times = 10
-            start_alpha = 0.025
-            stop_alpha = 0.0001
+            train_times = 20
+            start_alpha = 1.0
+            stop_alpha = 1.0
             for i in range(train_times):
                 learning_rate = start_alpha * (train_times - i) / train_times + stop_alpha * i / train_times
                 _, loss = sess.run([model.optimize, model.loss], feed_dict={
                         model.learning_rate : learning_rate,
                         model.input : self.__input,
                         model.labels : self.__label})
-            self.__pre_train_weight = sess.run(model.pre_train_tree_node_embedding)
+            self.__pre_train_weight = model.normalized_embedding.eval()
     
     def __write_pre_train_weight(self):
         path = self.__paras.dataset_path + Path.PRE_TRAIN_WEIGHT_PATH
@@ -62,13 +62,13 @@ class Pre_train:
             self.input = tf.placeholder(tf.int32, shape=[None, 2])
             self.labels = tf.placeholder(tf.int64, shape=[None, 1])
             self.learning_rate = tf.placeholder(tf.float32)
-            self.pre_train_tree_node_embedding = tf.get_variable('pre_train_embedding', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
+            self.pre_train_tree_node_embedding = tf.get_variable('pre_train_embedding', shape=[paras.tree_node_num, paras.tree_node_embedding_size])
 
             embed = tf.nn.embedding_lookup(self.pre_train_tree_node_embedding, self.input)
             self.input_embed = tf.reduce_mean(embed, axis=1)
 
-            self.nce_weights = tf.get_variable('nce_weights', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=self.__initializer())
-            self.nce_biases = tf.get_variable('nce_biases', shape=[paras.tree_node_num], initializer=self.__initializer())
+            self.nce_weights = tf.get_variable('nce_weights', shape=[paras.tree_node_num, paras.tree_node_embedding_size], initializer=tf.truncated_normal_initializer(stddev=0.1))
+            self.nce_biases = tf.get_variable('nce_biases', shape=[paras.tree_node_num], initializer=tf.truncated_normal_initializer(stddev=0.1))
             
             self.sampler = tf.nn.uniform_candidate_sampler(
                   true_classes=self.labels,
@@ -86,10 +86,10 @@ class Pre_train:
                     sampled_values=self.sampler))
 #            tf.summary.scalar('loss_pre_train', self.loss)
             self.optimize = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
-
-        def __initializer(self):
-            return tf.truncated_normal_initializer(stddev=0.1)   
-
+            
+            embedding = self.pre_train_tree_node_embedding
+            self.normalized_embedding = embedding / tf.sqrt(tf.reduce_sum(tf.square(embedding), axis=1, keep_dims=True))
+            
 if (__name__ == '__main__'):
     from setting import Parameters
     tf.reset_default_graph()

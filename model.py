@@ -30,8 +30,9 @@ class Model:
         # keep_prob = 1 - dropout
         self.keep_prob = tf.placeholder(tf.float32)
         
-        self.vocabulary_embedding = tf.get_variable('vocabulary_embedding', shape=[self.__paras.vocabulary_num, self.__paras.vocabulary_embedding_size], initializer=self.__initializer())
-        self.tree_node_embedding = tf.get_variable('tree_node_embedding', shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size], initializer=self.__initializer())
+        # use default glorot_uniform_initializer
+        self.vocabulary_embedding = tf.get_variable('vocabulary_embedding', shape=[self.__paras.vocabulary_num, self.__paras.vocabulary_embedding_size])
+        self.tree_node_embedding = tf.get_variable('tree_node_embedding', shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size])
         
         # pre train embedding
         self.pre_train_tree_node_embedding = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size])
