@@ -32,10 +32,10 @@ class Pre_train:
         model = Pre_train.__Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
             sess.run(tf.global_variables_initializer())
-            # may up the alpha
-            train_times = 20
-            start_alpha = 1.0
-            stop_alpha = 1.0
+
+            train_times = 1000
+            start_alpha = 0.025
+            stop_alpha = 0.0001
             for i in range(train_times):
                 learning_rate = start_alpha * (train_times - i) / train_times + stop_alpha * i / train_times
                 _, loss = sess.run([model.optimize, model.loss], feed_dict={
