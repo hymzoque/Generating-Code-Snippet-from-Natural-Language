@@ -64,7 +64,7 @@ class Parameters_conala:
     tree_node_embedding_size = 64
     cnn_deepth = 20
     deep_CNN_kernel_size = 2
-    keep_prob = 0.5
+    keep_prob = 0.3
     hidden_layer_width = 768
         
     train_times = 400
