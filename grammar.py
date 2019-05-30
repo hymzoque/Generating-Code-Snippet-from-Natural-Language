@@ -3,7 +3,7 @@
 
 """
 class Grammar:
-    def __init__():
+    def __init__(self):
         import astunparse
         astunparse._Store = Grammar.stub
         astunparse._Load = Grammar.stub
@@ -24,7 +24,10 @@ class Grammar:
         
         # ast Node as parent
         if ('ast.' in parent):
-            meth = getattr(self, '_' + parent.replace('.', '_'))
+            n = '_' + parent.replace('.', '_')
+            if not (hasattr(self, n)):
+                return True
+            meth = getattr(self, n)
             return meth(child, position)
         
         # Name and Str must have string as first child(not strict)
