@@ -30,9 +30,6 @@ class Grammar:
             meth = getattr(self, n)
             return meth(child, position)
         
-        # Name and Str must have string as first child(not strict)
-        
-            
         return True
     
     ''' ClassDef('name', 'bases', 'keywords', 'body', 'decorator_list'), name must be str, else must be <List> '''
@@ -53,23 +50,44 @@ class Grammar:
     
     ''' Call('func', 'args', 'keywords'), args and keywords must be <List> '''
     def _ast_Call(self, child, position):
-        if (position == 0 or position == 1):
-            if not (self.__is_list(child)):
-                return False
-        return True
+        return False if ((position == 0 or position == 1) and not (self.__is_list(child))) else True
     
     def _ast_Module(self, child, position):
         return True if self.__is_list(child) else False
     
+    def _ast_Interactive(self, child, position):
+        return True if self.__is_list(child) else False    
+    
+    def _ast_ImportFrom(self, child, position):
+        return False if (position == 0 and not self.__is_list(child)) else True    
+    
     def _ast_Assign(self, child, position):
-        if (position == -1 and not self.__is_list(child)):
-            return False
-        return True
+        return False if (position == -1 and not self.__is_list(child)) else True
     
     def _ast_Try(self, child, position):
-        if (position == 0 and not self.__is_list(child)):
-            return False
-        return True
+        return False if (position == 0 and not self.__is_list(child)) else True
+    
+    def _ast_ListComp(self, child, position):
+        return False if (position == 0 and not self.__is_list(child)) else True
+    
+    def _ast_GeneratorExp(self, child, position):
+        return False if (position == 0 and not self.__is_list(child)) else True
+    
+    def _ast_SetComp(self, child, position):
+        return False if (position == 0 and not self.__is_list(child)) else True
+
+    def _ast_DictComp(self, child, position):
+        return False if (position == 1 and not self.__is_list(child)) else True
+    
+    def _ast_comprehension(self, child, position):
+        return False if (position == 1 and not self.__is_list(child)) else True
+
+    def _ast_Compare(self, child, position):
+        return False if ((position == 0 or position == 1) and not self.__is_list(child)) else True
+    
+    def _ast_arguments(self, child, position):
+        return False if (position in [-1, 1, 2, 4] and not self.__is_list(child)) else True    
+    
     
     def _ast_Str(self, child, position):
         if (position == -1 and not self.__is_str(child)):
