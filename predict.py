@@ -190,6 +190,7 @@ class Predict:
             self.log.write('unparse error:\n')
             self.log.write(str(sys.exc_info()))
         self.log.write('\n\n')
+        self.log.flush()
 
         
     '''
