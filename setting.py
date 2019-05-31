@@ -13,7 +13,7 @@ class Path:
     NL_VOCABULARY_PATH = GENERATED_PATH + 'nl_vocabulary'
     TREE_NODES_VOCABULARY_PATH = GENERATED_PATH + 'tree_nodes_vocabulary'
     PRE_TRAIN_DATA_PATH = GENERATED_PATH + 'pre_train_data'
-    PRE_TRAIN_WEIGHT_PATH = GENERATED_PATH + 'pre_train_weight.txt'
+    PRE_TRAIN_WEIGHT_PATH = GENERATED_PATH + 'pre_train_weight/'
     STATISTICS_PATH = GENERATED_PATH + 'statistics'
     
     __MODEL_PATH = 'model/'

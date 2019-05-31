@@ -108,10 +108,7 @@ class Train:
                             model.input_semantic_units : train_batches[count][4],
                             model.input_children_of_semantic_units : train_batches[count][5],
                             model.correct_output : train_batches[count][6],
-                            model.keep_prob : self.__paras.keep_prob,
-                            model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)
-                            }
-                    )
+                            model.keep_prob : self.__paras.keep_prob})
         return summary
     
     ''' '''
@@ -131,9 +128,7 @@ class Train:
                             model.input_semantic_units : valid_batches[count][4],
                             model.input_children_of_semantic_units : valid_batches[count][5],
                             model.correct_output : valid_batches[count][6],
-                            model.keep_prob : 1.0,
-                            model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)                
-                            })
+                            model.keep_prob : 1.0})
             accuracy += batch_accuracy
         accuracy /= batch_num
         return accuracy, summary
@@ -148,6 +143,15 @@ class Train:
         else:
             session.run(tf.global_variables_initializer())
             print('new model')
+            
+            # new mode with pre train weight
+            if (self.__paras.use_pre_train):
+                path = self.__paras.dataset_path + Path.PRE_TRAIN_WEIGHT_PATH
+                if not (os.path.exists(path + 'checkpoint')):
+                    raise Exception('have not done the pre train')
+                saver = tf.train.Saver()
+                saver.restore(session, tf.train.latest_checkpoint(path))
+                print('restoring pre train weight')
         
     ''' save checkpoint '''
     def __save_ckpt(self, session):

@@ -4,6 +4,7 @@
 """
 import tensorflow as tf
 import numpy as np
+import os
 
 from setting import Path
 
@@ -17,7 +18,6 @@ class Pre_train:
         self.__paras = paras
         self.__process_pre_train_data()
         self.__pre_train()
-        self.__write_pre_train_weight()
     
     '''
     '''
@@ -42,11 +42,14 @@ class Pre_train:
                         model.learning_rate : learning_rate,
                         model.input : self.__input,
                         model.labels : self.__label})
-            self.__pre_train_weight = model.normalized_embedding.eval()
-    
-    def __write_pre_train_weight(self):
-        path = self.__paras.dataset_path + Path.PRE_TRAIN_WEIGHT_PATH
-        np.savetxt(path, self.__pre_train_weight)
+            
+            # save embedding weight
+            path = self.__paras.dataset_path + Path.PRE_TRAIN_WEIGHT_PATH
+            if not os.path.exists(path):
+                os.makedirs(path)
+            saver = tf.train.Saver({'pre_train_tree_node_embedding' : model.normalized_embedding})
+            saver.save(sess, path + 'weight.ckpt')
+            
     
     def __gpu_config(self):
         config = tf.ConfigProto(allow_soft_placement=True)

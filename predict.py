@@ -12,7 +12,6 @@ import ast
 import astunparse
 
 import model
-import data
 from setting import Path
 from setting import tokenize
 from data_generator import Generator
@@ -216,9 +215,7 @@ class Predict:
                         model.input_ast_grandparent_nodes : data_batch[3], # grandparent_list_batch
                         model.input_semantic_units : data_batch[4], # semantic_units_batch
                         model.input_children_of_semantic_units : data_batch[5], # semantic_unit_children_batch
-                        model.keep_prob : 1.0,
-                        model.pre_train_tree_node_embedding : data.Data.get_pre_train_weight(self.__paras)              
-                        })
+                        model.keep_prob : 1.0})
         
         return log_predicted_output
     
