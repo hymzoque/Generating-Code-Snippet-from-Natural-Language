@@ -42,12 +42,13 @@ class Pre_train:
                         model.learning_rate : learning_rate,
                         model.input : self.__input,
                         model.labels : self.__label})
+            model.normalize.eval()
             
             # save embedding weight
             path = self.__paras.dataset_path + Path.PRE_TRAIN_WEIGHT_PATH
             if not os.path.exists(path):
                 os.makedirs(path)
-            saver = tf.train.Saver({'pre_train_tree_node_embedding' : model.normalized_embedding})
+            saver = tf.train.Saver({'pre_train_tree_node_embedding' : model.pre_train_tree_node_embedding})
             saver.save(sess, path + 'weight.ckpt')
             
     
@@ -90,8 +91,10 @@ class Pre_train:
 #            tf.summary.scalar('loss_pre_train', self.loss)
             self.optimize = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(self.loss)
             
+            # normalize
             embedding = self.pre_train_tree_node_embedding
-            self.normalized_embedding = embedding / tf.sqrt(tf.reduce_sum(tf.square(embedding), axis=1, keep_dims=True))
+            normalized_embedding = embedding / tf.sqrt(tf.reduce_sum(tf.square(embedding), axis=1, keep_dims=True))
+            self.normalize = self.pre_train_tree_node_embedding.assign(normalized_embedding)
             
 if (__name__ == '__main__'):
     from setting import Parameters
