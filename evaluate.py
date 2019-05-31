@@ -59,12 +59,15 @@ class Evaluate:
         
         log_path = 'evaluate_log'
         with open(log_path, 'w', encoding='utf-8') as f:
-            f.write('\n')
+            f.write('start evaluating\n')
+            f.write('dataset=' + str(self.__paras.dataset_path))
+            f.write(', use_pre_train=' + str(self.__paras.use_pre_train))
+            f.write(', use_semantic=' + str(self.__paras.use_semantic_logic_order) + '\n')
             for i in range(len(self.__correct_code)):
                 f.write('correct : ' + self.__correct_code[i] + '\n')
                 f.write('predict : ' + self.__predicted_code[i] + '\n')
                 f.write('bleu    : ' + str(self.__bleus[i]) + '\n\n')
-            f.write('mean bleu : ' + str(mean_bleu))
+            f.write('mean bleu : ' + str(mean_bleu) + '\n\n')
     
 if (__name__ == '__main__'):
     from setting import Parameters
