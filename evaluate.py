@@ -24,7 +24,7 @@ class Evaluate:
             
             for data_unit in test_data:
                 code = data_unit['snippet']
-                if (code == 'null'): continue
+                if (data_unit['rewritten_intent'] == 'null'): continue
                 self.__correct_code.append(code)
             return
         
@@ -52,8 +52,8 @@ class Evaluate:
         self.__bleus = []
         for i in range(len(self.__correct_code)):
             self.__bleus.append(bleu_score.compute_bleu(
-                    reference_corpus=tokenize(self.__correct_code[i]), 
-                    translation_corpus=tokenize(self.__predicted_code[i]))[0])
+                    reference_corpus=[[tokenize(self.__correct_code[i])]], 
+                    translation_corpus=[tokenize(self.__predicted_code[i])])[0])
             
         mean_bleu = sum(self.__bleus) / len(self.__bleus)
         
