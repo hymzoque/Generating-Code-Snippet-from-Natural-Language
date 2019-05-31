@@ -25,7 +25,7 @@ class Train:
         data_handle = data.Data(self.__paras)
         nn_model = model.Model(self.__paras)
         with tf.Session(config=self.__gpu_config()) as sess:
-            self.__get_ckpt(sess)
+            self.__get_ckpt(sess, nn_model)
             start = time.time()
             
             self.__train_once(sess, data_handle, nn_model)
@@ -53,7 +53,7 @@ class Train:
         
         with tf.Session(config=self.__gpu_config()) as sess:
             # model file
-            self.__get_ckpt(sess)
+            self.__get_ckpt(sess, nn_model)
             # summary writer
             summary_path = Path.get_summary_path(self.__paras)
             if not os.path.exists(summary_path):
@@ -134,7 +134,7 @@ class Train:
         return accuracy, summary
     
     ''' restore or create new checkpoint '''
-    def __get_ckpt(self, session):
+    def __get_ckpt(self, session, model):
         dir_path = self.__model_dir
         if (os.path.exists(dir_path + 'checkpoint')):
             saver = tf.train.Saver()
@@ -149,7 +149,7 @@ class Train:
                 path = self.__paras.dataset_path + Path.PRE_TRAIN_WEIGHT_PATH
                 if not (os.path.exists(path + 'checkpoint')):
                     raise Exception('have not done the pre train')
-                saver = tf.train.Saver()
+                saver = tf.train.Saver([model.pre_train_tree_node_embedding])
                 saver.restore(session, tf.train.latest_checkpoint(path))
                 print('restoring pre train weight')
         
