@@ -77,13 +77,14 @@ class Predict:
     ''' predict one sentence '''
     def __predict_one_sentence(self, description, write_path, session, model):
         # initialize the beam
-        begin_unit = Predict.__Beam_Unit(description, ['ast.Module', '{'], 0, -5, self.__tree_nodes_vocabulary)
+        begin_unit = Predict.__Beam_Unit(description, ['ast.Module', '{'], -5, 1, self.__tree_nodes_vocabulary)
         begin_unit.generate_data(self.__paras)
         beam = [begin_unit]
         
         # recoord best result
         max_log_probability_result = Predict.__Beam_Unit(None, None, -1e10, None, None)
-        
+                
+        self.log.write('recording each result:\n')        
         # predicition
         for i in range(self.__paras.max_predict_time):
             ''' predict ''' 
@@ -107,8 +108,7 @@ class Predict:
                 
                 # reserve all possible layers that can append the next predicted node
                 appendable_layers = self.__check_appendable_layers(all_parent_layers)
-                
-                self.log.write('recording each result:\n')
+
                 # if nothing or only '<List>' as parent in the appendable_layers
                 # try to append possibality of <END_Node>
                 # and try to update max_log_probability_result
@@ -126,6 +126,7 @@ class Predict:
                         self.log.write(result_code)
                     except:
                         self.log.write(str(sys.exc_info()))
+                    self.log.write('\n')
                     end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, self.__paras.short_sentence_penalty)
                     # if better result appears, update the best result
                     if (end_log_probability > max_log_probability_result.log_probability):
