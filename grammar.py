@@ -90,6 +90,38 @@ class Grammar:
     def _ast_arguments(self, child, position):
         return False if (position in [-1, 1, 2, 4] and not self.__is_list(child)) else True    
     
+    def _ast_Import(self, child, position):
+        return False if not self.__is_list(child) else True
+
+    def _ast_Delete(self, child, position):
+        return False if not self.__is_list(child) else True    
+
+    def _ast_Global(self, child, position):
+        return False if not self.__is_list(child) else True  
+
+    def _ast_Nonlocal(self, child, position):
+        return False if not self.__is_list(child) else True  
+    
+    def _ast_With(self, child, position):
+        return False if (position == -1 and not self.__is_list(child)) else True
+    
+    def _ast_List(self, child, position):
+        return False if (position == -1 and not self.__is_list(child)) else True
+
+    def _ast_Set(self, child, position):
+        return False if not self.__is_list(child) else True  
+
+    def _ast_Dict(self, child, position):
+        return False if not self.__is_list(child) else True  
+    
+    def _ast_Tuple(self, child, position):
+        return False if (position == -1 and not self.__is_list(child)) else True
+    
+    def _ast_BoolOp(self, child, position):
+        return False if (position == 0 and not self.__is_list(child)) else True
+
+    def _ast_ExtSlice(self, child, position):
+        return False if not self.__is_list(child) else True  
     
     def _ast_Str(self, child, position):
         if (position == -1 and not self.__is_str(child)):
