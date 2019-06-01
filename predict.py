@@ -70,7 +70,6 @@ class Predict:
                 description = descriptions[n]
                 write_path = self.__prediction_dir + str(n)
                 self.log.write('num : ' + str(n) + '\n')
-                self.log.write('description : ' + str(description) + '\n')
                 self.__predict_one_sentence(description, write_path, sess, nn_model)
         self.log.write('\n')
         self.log.close()
@@ -78,7 +77,7 @@ class Predict:
     ''' predict one sentence '''
     def __predict_one_sentence(self, description, write_path, session, model):
         # initialize the beam
-        begin_unit = Predict.__Beam_Unit(description, ['ast.Module', '{'], 0, 1, self.__tree_nodes_vocabulary)
+        begin_unit = Predict.__Beam_Unit(description, ['ast.Module', '{'], 0, -5, self.__tree_nodes_vocabulary)
         begin_unit.generate_data(self.__paras)
         beam = [begin_unit]
         
@@ -109,6 +108,7 @@ class Predict:
                 # reserve all possible layers that can append the next predicted node
                 appendable_layers = self.__check_appendable_layers(all_parent_layers)
                 
+                self.log.write('recording each result:\n')
                 # if nothing or only '<List>' as parent in the appendable_layers
                 # try to append possibality of <END_Node>
                 # and try to update max_log_probability_result
@@ -118,12 +118,19 @@ class Predict:
                     # if end the log probability is
                     temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras.short_sentence_penalty)
                     temp = temp + log_probability_of_end_node
+                    
+                    self.log.write('length : ' + str(beam_unit.predicted_nodes_num + 1) + ', log probability before penalty : ' + str(temp) + '\n')
+                    self.log.write(str(unit_traceable_list))
+                    try:
+                        result_code = self.__traceable_list_to_code(unit_traceable_list)
+                        self.log.write(result_code)
+                    except:
+                        self.log.write(str(sys.exc_info()))
                     end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, self.__paras.short_sentence_penalty)
                     # if better result appears, update the best result
                     if (end_log_probability > max_log_probability_result.log_probability):
                         max_log_probability_result = Predict.__Beam_Unit(description, unit_traceable_list[:], end_log_probability, beam_unit.predicted_nodes_num + 1, self.__tree_nodes_vocabulary)
-                        self.log.write(str(end_log_probability) + ' ')
-                
+
                 # add to new beam
                 # for each appendable layer, 
                 for appendable_layer in appendable_layers:
