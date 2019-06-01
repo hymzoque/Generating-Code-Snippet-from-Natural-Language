@@ -31,6 +31,10 @@ class Grammar:
             meth = getattr(self, n)
             return meth(child, position)
         
+        # won't predict <Empty_Node>
+        if (child == '<Empty_Node>'):
+            return False
+        
         return True
     
     ''' ClassDef('name', 'bases', 'keywords', 'body', 'decorator_list'), name must be str, else must be <List> '''

@@ -108,7 +108,8 @@ class Train:
                             model.input_semantic_units : train_batches[count][4],
                             model.input_children_of_semantic_units : train_batches[count][5],
                             model.correct_output : train_batches[count][6],
-                            model.keep_prob : self.__paras.keep_prob})
+                            model.keep_prob : self.__paras.keep_prob,
+                            model.unbalance_weights_table : data.Data.get_unbalance_weights_table(self.__paras)})
         return summary
     
     ''' '''
@@ -128,7 +129,8 @@ class Train:
                             model.input_semantic_units : valid_batches[count][4],
                             model.input_children_of_semantic_units : valid_batches[count][5],
                             model.correct_output : valid_batches[count][6],
-                            model.keep_prob : 1.0})
+                            model.keep_prob : 1.0,
+                            model.unbalance_weights_table : data.Data.get_unbalance_weights_table(self.__paras)})
             accuracy += batch_accuracy
         accuracy /= batch_num
         return accuracy, summary

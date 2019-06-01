@@ -12,6 +12,7 @@ class Path:
     TEST_DATA_PATH = GENERATED_PATH + 'test_data'
     NL_VOCABULARY_PATH = GENERATED_PATH + 'nl_vocabulary'
     TREE_NODES_VOCABULARY_PATH = GENERATED_PATH + 'tree_nodes_vocabulary'
+    UNBALANCE_LOSS_WEIGHT_PATH = GENERATED_PATH + 'unbalance_loss_weight'
     PRE_TRAIN_DATA_PATH = GENERATED_PATH + 'pre_train_data'
     PRE_TRAIN_WEIGHT_PATH = GENERATED_PATH + 'pre_train_weight/'
     STATISTICS_PATH = GENERATED_PATH + 'statistics'

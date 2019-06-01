@@ -7,6 +7,7 @@ generate pre train data
 import ast
 import json
 import os
+import numpy as np
 
 from setting import Path
 from setting import tokenize
@@ -46,6 +47,7 @@ class Generator:
             os.makedirs(self.__data_dir + Path.GENERATED_PATH)
         self.__write_nl_vocabulary()
         self.__write_tree_nodes_vocabulary()
+        self.__write_unbalance_weights_table()
         
         # split the data file to several parts
         once_write_num = 5000
@@ -363,8 +365,10 @@ class Generator:
     def __register_ids_to_vocabulary(self, data_providers):
         nl_vocabulary_with_count = {}
         tree_nodes_vocabulary_with_count = {}
+        data_num = 0
         for data_provider in data_providers:
             for description, ast_root in data_provider.data_iter():
+                data_num += 1
                 ''' description '''
                 for word in description:
                     if word not in nl_vocabulary_with_count:
@@ -383,10 +387,25 @@ class Generator:
                         tree_nodes_vocabulary_with_count[node] += 1
                 
         for word, count in nl_vocabulary_with_count.items():
-            if (count >= self.__min_vocabulary_count): self.__nl_vocabulary[word] = len(self.__nl_vocabulary)
+            if (count >= self.__min_vocabulary_count): 
+                self.__nl_vocabulary[word] = len(self.__nl_vocabulary)
         for node, count in tree_nodes_vocabulary_with_count.items():
-            if (count >= self.__min_vocabulary_count): self.__tree_nodes_vocabulary[node] = len(self.__tree_nodes_vocabulary)
-    
+            if (count >= self.__min_vocabulary_count): 
+                self.__tree_nodes_vocabulary[node] = len(self.__tree_nodes_vocabulary)
+        
+        self.__unbalance_weights_table = np.zeros(len(self.__tree_nodes_vocabulary))
+        for node, count in tree_nodes_vocabulary_with_count.items():
+            if (count >= self.__min_vocabulary_count):
+                self.__unbalance_weights_table[self.__tree_nodes_vocabulary[node]] = 1.0 / count
+            else:
+                # 'unknwon'
+                self.__unbalance_weights_table[0] += count
+        if not self.__unbalance_weights_table[0] == 0:
+            self.__unbalance_weights_table[0] = 1.0 / self.__unbalance_weights_table[0]
+        # '<END_Node>'
+        self.__unbalance_weights_table[1] = 1.0 / data_num
+        # '<Empty_Node>'
+        self.__unbalance_weights_table[2] = 0
 
     def __get_ids_from_nl_vocabulary(self, words):
         return Generator.get_ids_from_nl_vocabulary(words, self.__nl_vocabulary)
@@ -431,6 +450,10 @@ class Generator:
         with open(path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(self.__tree_nodes_vocabulary, indent=1))
 
+    def __write_unbalance_weights_table(self):
+        path = self.__data_dir + Path.UNBALANCE_LOSS_WEIGHT_PATH
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(str(self.__unbalance_weights_table.tolist()))
         
     ''' write one(string) for read and one(ids) for model '''
     def __write_data(self, data, path):

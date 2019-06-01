@@ -184,3 +184,20 @@ class Data:
     def get_valid_batches(self):
         return self.__valid_batches
     
+    @staticmethod
+    def __read_unbalance_weights_table(paras):
+        path = paras.dataset_path + Path.UNBALANCE_LOSS_WEIGHT_PATH
+        with open(path, 'r', encoding='utf-8') as f:
+            unbalance_weights_table = eval(f.read())
+        for i in range(len(unbalance_weights_table)):
+            unbalance_weights_table[i] = [unbalance_weights_table[i]]
+        Data.unbalance_weights_table = unbalance_weights_table
+    
+    ''' [tree node num x 1] '''
+    @staticmethod
+    def get_unbalance_weights_table(paras):
+        if not hasattr(Data, 'unbalance_weights_table'):
+            Data.__read_unbalance_weights_table(paras)
+        return Data.unbalance_weights_table
+    
+    

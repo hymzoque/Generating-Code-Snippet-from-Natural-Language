@@ -27,6 +27,8 @@ class Model:
         self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])
         # indexes of correct output
         self.correct_output = tf.placeholder(tf.float32, shape=[None, self.__paras.tree_node_num])
+        # unbalance weights table
+        self.unbalance_weights_table = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, 1])
         # keep_prob = 1 - dropout
         self.keep_prob = tf.placeholder(tf.float32)
         
@@ -164,17 +166,26 @@ class Model:
         self.log_predicted_output = tf.log(tf.clip_by_value(self.predicted_output, 1e-100, 1.0))
         ''' 
         output and optimize
-        '''
+        '''        
+        # unbalance weights 
+        # [batch size]
+        unbalance_weights = tf.reduce_max(tf.matmul(self.correct_output, self.unbalance_weights_table), axis=1)
+        unbalance_weights = unbalance_weights / tf.reduce_sum(unbalance_weights) * unbalance_weights.shape[0]
+        
         # [batch size]
         predict_result = tf.equal(tf.argmax(self.predicted_output, 1), tf.argmax(self.correct_output, 1))
-        self.accuracy = tf.reduce_mean(tf.cast(predict_result, tf.float32))
-        # [batch size]
-        batch_cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=self.correct_output, logits=logits)
+        predict_result = tf.cast(predict_result, tf.float32)
+        self.accuracy = tf.reduce_mean(predict_result)
+        self.weighted_accuracy = tf.reduce_mean(tf.multiply(unbalance_weights, predict_result))
+        
+        batch_cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.correct_output, logits=logits, weights=unbalance_weights)
+        # weighted loss
         self.cross_entropy = tf.reduce_mean(batch_cross_entropy)
         self.optimize = tf.contrib.opt.AdamWOptimizer(weight_decay=self.__paras.weight_decay, learning_rate=self.__paras.learning_rate).minimize(self.cross_entropy)
         
-        tf.summary.scalar('loss', self.cross_entropy)
+        tf.summary.scalar('weighted_loss', self.cross_entropy)
         tf.summary.scalar('acc', self.accuracy)
+        tf.summary.scalar('weighted_acc', self.weighted_accuracy)
         self.merged = tf.summary.merge_all()
         
     ''' weight initializer '''
