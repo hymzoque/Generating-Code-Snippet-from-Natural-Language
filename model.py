@@ -35,7 +35,8 @@ class Model:
         self.tree_node_embedding = tf.get_variable('tree_node_embedding', shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size])
         
         # pre train embedding
-        self.pre_train_tree_node_embedding = tf.get_variable('pre_train_tree_node_embedding', shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size], trainable=True)
+        if (self.__paras.use_pre_train):
+            self.pre_train_tree_node_embedding = tf.get_variable('pre_train_tree_node_embedding', shape=[self.__paras.tree_node_num, self.__paras.tree_node_embedding_size], trainable=True)
 
     '''
     
