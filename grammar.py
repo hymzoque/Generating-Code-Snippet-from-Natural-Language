@@ -7,6 +7,8 @@ class Grammar:
         import astunparse
         astunparse._Store = Grammar.stub
         astunparse._Load = Grammar.stub
+        astunparse.Unparser._Store = Grammar.stub
+        astunparse.Unparser._Load = Grammar.stub
     
     @staticmethod
     def stub(s, t):
