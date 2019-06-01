@@ -58,13 +58,13 @@ class Parameters_conala:
     semantic_unit_children_num = 3
     min_vocabulary_count = 2
         
-    vocabulary_num = 1512
+    vocabulary_num = 2142
     vocabulary_embedding_size = 64
-    tree_node_num = 1140
+    tree_node_num = 1175
     tree_node_embedding_size = 64
     cnn_deepth = 12
     deep_CNN_kernel_size = [2, 3]
-    keep_prob = 0.3
+    keep_prob = 0.5
     hidden_layer_width = 768
         
     train_times = 400
@@ -99,20 +99,20 @@ class Parameters_hs:
     tree_node_embedding_size = 64
     cnn_deepth = 12
     deep_CNN_kernel_size = [2, 3]
-    keep_prob = 0.4
+    keep_prob = 0.5
     hidden_layer_width = 768
         
-    train_times = 200
+    train_times = 150
     learning_rate = 1e-4
     weight_decay = 1e-4
         
     train_batch_size = 64
     valid_batch_size = 256
         
-    max_predict_time = 300 # avg 143 max 723
+    max_predict_time = 250 # avg 143 max 723
     predict_beam_size = 20
     unknwon_log_penalty = 0
-    short_sentence_penalty = 1.3
+    short_sentence_penalty = 1.1
         
     dataset_path = Path.HS_PATH
         

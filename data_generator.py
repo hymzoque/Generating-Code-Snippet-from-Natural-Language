@@ -5,7 +5,6 @@ generate pre train data
 """
 
 import ast
-import re
 import json
 import os
 
@@ -112,10 +111,13 @@ class Generator:
                 
         def __data_iter_conala(self):
             for data_unit in self.__data_read_conala:
-                description = data_unit['rewritten_intent']
-                # skip the null description
-                if (description == 'null') : continue
-                description = tokenize(description)
+                description_1 = data_unit['intent']
+                description_2 = data_unit['rewritten_intent']
+                
+                description = tokenize(description_1)
+                if not (description_2 == 'null') : 
+                    description.extend(tokenize(description_2))
+                
                 ast_root = ast.parse(data_unit['snippet'])
                 yield description, ast_root 
         def __data_iter_hs(self):

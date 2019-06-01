@@ -425,9 +425,13 @@ class Predict:
                 test_data = eval(f.read())
             
             for data_unit in test_data:
-                description = data_unit['rewritten_intent']
-                if (description == 'null') : continue
-                description = tokenize(description)
+                description_1 = data_unit['intent']
+                description_2 = data_unit['rewritten_intent']
+                
+                description = tokenize(description_1)
+                if not (description_2 == 'null') : 
+                    description.extend(tokenize(description_2))
+
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
                 description_np = np.zeros([self.__paras.nl_len])
                 for i in range(len(description_ids)):
