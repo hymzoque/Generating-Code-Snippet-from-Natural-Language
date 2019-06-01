@@ -348,6 +348,10 @@ class Predict:
                     new_instance += 'child_list[' + str(i) + ']'
                     if (i != 0):
                         new_instance += ', '
+                # ast.Set must have a list with at least 1 element, if it is empty, we fill in a stub
+                if ((next_node == 'ast.Set') and len(child_list[0]) == 0):
+                    new_instance += '[ast.Load()]'
+                    
                 new_instance += ')'
                 new_node = eval(new_instance)
                 if (len(stacks) == 0):
