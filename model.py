@@ -185,13 +185,29 @@ class Model:
     '''    
     def __deep_CNN(self, tensor, channel_size):
         loop_time = int(self.__paras.cnn_deepth / 2)
+        stack = []
+        for kernel_size in self.__paras.deep_CNN_kernel_size:
+            temp = tensor
+            for i in range(loop_time):
+                temp = tf.layers.conv1d(temp, channel_size , kernel_size, padding='same')
+                temp = tf.nn.relu(temp)
+                temp = tf.layers.conv1d(temp, channel_size , kernel_size, padding='same')
+                temp = tf.add_n([temp, tensor])
+                temp = tf.nn.relu(temp)
+            stack.append(temp)
+        stack = tf.stack(stack, axis=1)
+        return self.__multi_channel_pooling(stack)
+    
+    def __deep_CNN_1_channel(self, tensor, channel_size, kernel_size):
+        loop_time = int(self.__paras.cnn_deepth / 2)
         for i in range(loop_time):
-            temp = tf.layers.conv1d(tensor, channel_size , self.__paras.deep_CNN_kernel_size, padding='same')
+            temp = tf.layers.conv1d(tensor, channel_size , kernel_size, padding='same')
             temp = tf.nn.relu(temp)
-            temp = tf.layers.conv1d(temp, channel_size , self.__paras.deep_CNN_kernel_size, padding='same')
+            temp = tf.layers.conv1d(temp, channel_size , kernel_size, padding='same')
             temp = tf.add_n([temp, tensor])
-            tensor = tf.nn.relu(temp)            
+            tensor = tf.nn.relu(temp)
         return tensor
+    
     
     '''
     @tensor : [batch_size, tree/nl_length(height), tree/nl_embedding_size(width)]
@@ -232,7 +248,7 @@ class Model:
         return weight_sum
     
     ''' 
-    @tensor : [batch size, k, tree length, embedding size] (k=2)
+    @tensor : [batch size, channel size, tree length, embedding size]
     @return : [batch size, tree length, embedding size]
     '''
     def __multi_channel_pooling(self, tensor):

@@ -63,7 +63,7 @@ class Parameters_conala:
     tree_node_num = 1140
     tree_node_embedding_size = 64
     cnn_deepth = 12
-    deep_CNN_kernel_size = 2
+    deep_CNN_kernel_size = [2, 3]
     keep_prob = 0.3
     hidden_layer_width = 768
         
@@ -98,7 +98,7 @@ class Parameters_hs:
     tree_node_num = 1535
     tree_node_embedding_size = 64
     cnn_deepth = 12
-    deep_CNN_kernel_size = 2
+    deep_CNN_kernel_size = [2, 3]
     keep_prob = 0.4
     hidden_layer_width = 768
         
