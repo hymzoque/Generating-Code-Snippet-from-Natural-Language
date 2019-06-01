@@ -5,10 +5,9 @@
 class Grammar:
     def __init__(self):
         import astunparse
-        astunparse._Store = Grammar.stub
-        astunparse._Load = Grammar.stub
         astunparse.Unparser._Store = Grammar.stub
         astunparse.Unparser._Load = Grammar.stub
+        astunparse.Unparser._NoneType = Grammar.stub
     
     @staticmethod
     def stub(s, t):
@@ -46,7 +45,9 @@ class Grammar:
     def _ast_FunctionDef(self, child, position):
         if position == -1 and not self.__is_str(child):
             return False
-        if position in [0,1,2] and not self.__is_list(child):
+        if position == 0 and not child == 'ast.arguments':
+            return False
+        if position in [1,2] and not self.__is_list(child):
             return False
         return True
     
@@ -85,10 +86,20 @@ class Grammar:
         return False if (position == 1 and not self.__is_list(child)) else True
 
     def _ast_Compare(self, child, position):
-        return False if ((position == 0 or position == 1) and not self.__is_list(child)) else True
+        if ((position == 0 or position == 1) and not self.__is_list(child)):
+            return False
+        # 
+        return True
     
     def _ast_arguments(self, child, position):
-        return False if (position in [-1, 1, 2, 4] and not self.__is_list(child)) else True    
+        if (position in [-1, 1, 2, 4] and not self.__is_list(child)):
+            return False
+        if (position in [0, 3] and not (child == 'ast.arg' or child == '<None_Node>')):
+            return False
+        return True
+    
+    def _ast_arg(self, child, position):
+        return False if (position == -1 and not self.__is_str(child)) else True
     
     def _ast_Import(self, child, position):
         return False if not self.__is_list(child) else True
@@ -118,25 +129,41 @@ class Grammar:
         return False if (position == -1 and not self.__is_list(child)) else True
     
     def _ast_BoolOp(self, child, position):
-        return False if (position == 0 and not self.__is_list(child)) else True
+        if (position == 0 and not self.__is_list(child)):
+            return False 
+        if (position == -1 and not (child == 'ast.And' or child == 'ast.Or')):
+            return False
+        return True
 
     def _ast_ExtSlice(self, child, position):
         return False if not self.__is_list(child) else True  
     
     def _ast_Str(self, child, position):
-        if (position == -1 and not self.__is_str(child)):
-            return False
-        return True
+        return False if (position == -1 and not self.__is_str(child)) else True
     
     def _ast_Name(self, child, position):
-        if (position == -1 and not self.__is_str(child)):
+        return False if (position == -1 and not self.__is_str(child)) else True
+    
+    def _ast_Num(self, child, position):
+        return False if (position == -1 and not self.__is_int(child) and not self.__is_float(child)) else True                
+    
+    def _ast_Subscript(self, child, position):
+        return False if (position == 0 and not (child == 'ast.Index' or child =='ast.Slice')) else True     
+    
+    def _ast_BinOp(self, child, position):
+        if ((position == 0) and not 
+            (child == 'ast.Add' or child == 'ast.Sub' or child == 'ast.Mult' or child == 'ast.Div' or child == 'ast.Mod' or 
+             child == 'ast.LShift' or child == 'ast.RShift' or child == 'ast.BitOr' or child == 'ast.BitXor' or child == 'ast.BitAnd' or 
+             child == 'ast.FloorDiv' or child == 'ast.Pow' or child == 'ast.MatMult')):
             return False
         return True
     
-    def _ast_Num(self, child, position):
-        if (position == -1 and not self.__is_int(child) and not self.__is_float(child)):
+    def _ast_UnaryOp(self, child, position):
+        if ((position == -1) and not 
+            (child == 'ast.Invert' or child == 'ast.Not' or child == 'ast.UAdd' or child == 'ast.USub')):
             return False
-        return True                
+        return True
+    
     
     def __is_list(self, node):
         return node == '<List>' or node == '<Empty_List>'
