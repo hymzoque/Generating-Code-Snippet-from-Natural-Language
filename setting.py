@@ -53,7 +53,7 @@ class Path:
         return n
     
 class Parameters_conala:
-    nl_len = 62 # max 62
+    nl_len = 78 # max 78
     tree_len = 255 # max 255
     semantic_units_len = 32 # max 32
     semantic_unit_children_num = 3
