@@ -170,7 +170,7 @@ class Model:
         # unbalance weights 
         # [batch size]
         unbalance_weights = tf.reduce_max(tf.matmul(self.correct_output, self.unbalance_weights_table), axis=1)
-        unbalance_weights = unbalance_weights / tf.reduce_sum(unbalance_weights) * unbalance_weights.shape[0]
+        unbalance_weights = unbalance_weights / tf.reduce_sum(unbalance_weights) * tf.cast(tf.shape(unbalance_weights)[0], tf.float32)
         
         # [batch size]
         predict_result = tf.equal(tf.argmax(self.predicted_output, 1), tf.argmax(self.correct_output, 1))
