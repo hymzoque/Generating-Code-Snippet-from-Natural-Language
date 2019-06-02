@@ -170,13 +170,11 @@ class Model:
         # unbalance weights 
         # [batch size]
         unbalance_weights = tf.reduce_max(tf.matmul(self.correct_output, self.unbalance_weights_table), axis=1)
-        unbalance_weights = unbalance_weights / tf.reduce_sum(unbalance_weights) * tf.cast(tf.shape(unbalance_weights)[0], tf.float32)
         
         # [batch size]
         predict_result = tf.equal(tf.argmax(self.predicted_output, 1), tf.argmax(self.correct_output, 1))
         predict_result = tf.cast(predict_result, tf.float32)
         self.accuracy = tf.reduce_mean(predict_result)
-        self.weighted_accuracy = tf.reduce_mean(tf.multiply(unbalance_weights, predict_result))
         
         batch_cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.correct_output, logits=logits, weights=unbalance_weights)
         # weighted loss
@@ -185,7 +183,6 @@ class Model:
         
         tf.summary.scalar('weighted_loss', self.cross_entropy)
         tf.summary.scalar('acc', self.accuracy)
-        tf.summary.scalar('weighted_acc', self.weighted_accuracy)
         self.merged = tf.summary.merge_all()
         
     ''' weight initializer '''

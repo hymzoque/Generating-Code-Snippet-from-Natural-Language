@@ -401,11 +401,20 @@ class Generator:
                 # 'unknwon'
                 self.__unbalance_weights_table[0] += count
         if not self.__unbalance_weights_table[0] == 0:
-            self.__unbalance_weights_table[0] = 1.0 / self.__unbalance_weights_table[0]
+            self.__unbalance_weights_table[0] = np.power(1.0 / self.__unbalance_weights_table[0], self.__paras.unbalance_weight_power)
         # '<END_Node>'
-        self.__unbalance_weights_table[1] = 1.0 / data_num
+        self.__unbalance_weights_table[1] = np.power(1.0 / data_num, self.__paras.unbalance_weight_power)
         # '<Empty_Node>'
         self.__unbalance_weights_table[2] = 0
+        
+        # normalize
+        weights_sum = 0.0
+        for w in self.__unbalance_weights_table:
+            weights_sum += w
+        normalize = float(len(self.__unbalance_weights_table)) / weights_sum
+        for i in range(len(self.__unbalance_weights_table)):
+            self.__unbalance_weights_table[i] = self.__unbalance_weights_table[i] * normalize
+
 
     def __get_ids_from_nl_vocabulary(self, words):
         return Generator.get_ids_from_nl_vocabulary(words, self.__nl_vocabulary)

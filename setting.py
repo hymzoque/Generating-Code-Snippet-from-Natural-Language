@@ -57,18 +57,19 @@ class Parameters_conala:
     tree_len = 255 # max 255
     semantic_units_len = 32 # max 32
     semantic_unit_children_num = 3
-    min_vocabulary_count = 2
+    unbalance_weight_power = 0.6
+    min_vocabulary_count = 4
         
-    vocabulary_num = 2142
+    vocabulary_num = 1191
     vocabulary_embedding_size = 64
-    tree_node_num = 1175
+    tree_node_num = 574
     tree_node_embedding_size = 64
     cnn_deepth = 12
     deep_CNN_kernel_size = [2, 3]
     keep_prob = 0.5
     hidden_layer_width = 768
         
-    train_times = 400
+    train_times = 300
     learning_rate = 1e-4
     weight_decay = 1e-4
         
@@ -92,11 +93,12 @@ class Parameters_hs:
     tree_len = 723 # max 723
     semantic_units_len = 75 # max 75
     semantic_unit_children_num = 3
-    min_vocabulary_count = 1
+    unbalance_weight_power = 0.6
+    min_vocabulary_count = 2
         
-    vocabulary_num = 1153
+    vocabulary_num = 462
     vocabulary_embedding_size = 64
-    tree_node_num = 1535
+    tree_node_num = 625
     tree_node_embedding_size = 64
     cnn_deepth = 12
     deep_CNN_kernel_size = [2, 3]
