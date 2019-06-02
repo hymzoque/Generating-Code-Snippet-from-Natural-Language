@@ -64,11 +64,15 @@ class Train:
             best_accuracy = 0
             for train_loop in range(self.__paras.train_times):
                 start_time = time.time()
-                train_summary = self.__train_once(sess, data_handle, nn_model)
-                train_writer.add_summary(train_summary, train_loop)
+                train_summarys = self.__train_once(sess, data_handle, nn_model)
                 
-                valid_accuracy, test_summary = self.__valid(sess, data_handle, nn_model)
-                test_writer.add_summary(test_summary, train_loop)
+                batch_num = len(train_summarys)
+                for i in range(batch_num):
+                    train_writer.add_summary(train_summarys[i], train_loop * batch_num + i)
+                
+                valid_accuracy, test_summarys = self.__valid(sess, data_handle, nn_model)
+                for i in range(batch_num):
+                    test_writer.add_summary(test_summarys[i], train_loop * batch_num + i)
                 end_time = time.time()
                 
                 log.write('epoch ' + str(train_loop + 1) + ' :\n')
@@ -97,6 +101,7 @@ class Train:
         # train
         train_batches = data_handle.get_train_batches()
         batch_num = len(train_batches)
+        summarys = []
         for count in range(batch_num):
             _, summary = session.run(
                     [model.optimize, model.merged],
@@ -110,13 +115,14 @@ class Train:
                             model.correct_output : train_batches[count][6],
                             model.keep_prob : self.__paras.keep_prob,
                             model.unbalance_weights_table : data.Data.get_unbalance_weights_table(self.__paras)})
-        return summary
+            summarys.append(summary)
+        return summarys
     
     ''' '''
     def __valid(self, session, data_handle, model):
         valid_batches = data_handle.get_valid_batches()
         batch_num = len(valid_batches)
-        
+        summarys = []
         accuracy = 0
         for count in range(batch_num):
             batch_accuracy, summary = session.run(
@@ -131,9 +137,11 @@ class Train:
                             model.correct_output : valid_batches[count][6],
                             model.keep_prob : 1.0,
                             model.unbalance_weights_table : data.Data.get_unbalance_weights_table(self.__paras)})
+            summarys.append(summary)
             accuracy += batch_accuracy
+            
         accuracy /= batch_num
-        return accuracy, summary
+        return accuracy, summarys
     
     ''' restore or create new checkpoint '''
     def __get_ckpt(self, session, model):
