@@ -16,25 +16,25 @@ class Train:
     def __init__(self, paras_list):
         self.__paras_list = paras_list
         
-        if (paras.test):
-            self.train = self.test_train
+#        if (paras.test):
+#            self.train = self.test_train
         
-    ''' test the training and valid time of one batch '''
-    def test_train(self):
-        data_handle = data.Data(self.__paras)
-        nn_model = model.Model(self.__paras)
-        with tf.Session(config=self.__gpu_config()) as sess:
-            self.__get_ckpt(sess, nn_model)
-            start = time.time()
-            
-            self.__train_once(sess, data_handle, nn_model)
-            mid = time.time()
-            print('train time used : ' + str(mid - start))
-            
-            self.__valid(sess, data_handle, nn_model)
-            end = time.time()
-            print('valid time used : ' + str(end - mid))
-#            self.__save_ckpt(sess)
+#    ''' test the training and valid time of one batch '''
+#    def test_train(self):
+#        data_handle = data.Data(self.__paras)
+#        nn_model = model.Model(self.__paras)
+#        with tf.Session(config=self.__gpu_config()) as sess:
+#            self.__get_ckpt(sess, nn_model)
+#            start = time.time()
+#            
+#            self.__train_once(sess, data_handle, nn_model)
+#            mid = time.time()
+#            print('train time used : ' + str(mid - start))
+#            
+#            self.__valid(sess, data_handle, nn_model)
+#            end = time.time()
+#            print('valid time used : ' + str(end - mid))
+##            self.__save_ckpt(sess)
             
     ''' train method '''
     def train(self):
