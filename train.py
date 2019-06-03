@@ -47,16 +47,15 @@ class Train:
         log.write(str(datetime.datetime.now()) + '\n')
         log.write('start training\n')
         log.write('dataset=' + str(paras_base.dataset_path))
-        log.write(', use_pre_train=' + str(self.__paras.use_pre_train))
-        log.write(', use_semantic=' + str(self.__paras.use_semantic_logic_order) + '\n')
+        log.write(', use_pre_train=' + str(paras_base.use_pre_train))
+        log.write(', use_semantic=' + str(paras_base.use_semantic_logic_order) + '\n')
         
         for paras, model_dir, summary_dir, get_train_batches, get_valid_batches in zip(self.__paras_list, model_dir_list, summary_dir_list, 
-                                                                                       data_handle.get_train_batches_methods, data_handle.get_valid_batches_methods):
-            nn_model = model.Model(paras)
-            
+                                                                                       data_handle.get_train_batches_methods(), data_handle.get_valid_batches_methods()):
             log.write('training ' + paras.__class__.__name__ + ' for ' + str(paras.train_times) + ' times\n')
             
-            with tf.Session(config=self.__gpu_config()) as sess, tf.Graph().as_default():
+            with tf.Graph().as_default(), tf.Session(config=self.__gpu_config()) as sess:
+                nn_model = model.Model(paras)
                 # model file
                 self.__get_ckpt(model_dir, paras, sess, nn_model)
                 # summary writer
@@ -68,7 +67,7 @@ class Train:
                 best_accuracy = 0
                 for train_loop in range(paras.train_times):
                     start_time = time.time()
-                    train_summarys = self.__train_once(sess, get_train_batches, nn_model)
+                    train_summarys = self.__train_once(paras, sess, get_train_batches, nn_model)
                     
                     batch_num = len(train_summarys)
                     for i in range(batch_num):
@@ -101,7 +100,7 @@ class Train:
         return config            
                 
     ''' train one epoch '''
-    def __train_once(self, session, get_train_batches, model):
+    def __train_once(self, paras, session, get_train_batches, model):
         # train
         train_batches = get_train_batches()
         batch_num = len(train_batches)
@@ -117,7 +116,7 @@ class Train:
                             model.input_semantic_units : train_batches[count][4],
                             model.input_children_of_semantic_units : train_batches[count][5],
                             model.correct_output : train_batches[count][6],
-                            model.keep_prob : self.__paras.keep_prob
+                            model.keep_prob : paras.keep_prob
                             #,model.unbalance_weights_table : data.Data.get_unbalance_weights_table(self.__paras)
                             })
             summarys.append(summary)
