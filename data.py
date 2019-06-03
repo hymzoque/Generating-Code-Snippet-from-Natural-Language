@@ -8,21 +8,21 @@ import os
 from setting import Path
 
 class Data:
-    def __init__(self, paras):
-        self.__paras = paras
-        self.__data_dir = paras.dataset_path
+    def __init__(self, paras_list):
+        data_dir = paras_list[0].dataset_path
+        self.__train_batch_size = paras_list[0].train_batch_size
         
         suffixes = ['_ast_nodes', '_functions', '_variables', '_values']
         
-        self.__train_data_ast_nodes = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[0])
-        self.__train_data_functions_name = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[1])
-        self.__train_data_variables_name = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[2])
-        self.__train_data_values = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[3])
+        self.__train_data_ast_nodes = self.__train_data_process(data_dir + Path.TRAIN_DATA_PATH + suffixes[0], paras_list[0])
+        self.__train_data_functions_name = self.__train_data_process(data_dir + Path.TRAIN_DATA_PATH + suffixes[1], paras_list[1])
+        self.__train_data_variables_name = self.__train_data_process(data_dir + Path.TRAIN_DATA_PATH + suffixes[2], paras_list[2])
+        self.__train_data_values = self.__train_data_process(data_dir + Path.TRAIN_DATA_PATH + suffixes[3], paras_list[3])
         
-        self.__valid_batches_ast_nodes = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[0])
-        self.__valid_batches_functions_name = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[1])
-        self.__valid_batches_variables_name = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[2])
-        self.__valid_batches_values = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[3])
+        self.__valid_batches_ast_nodes = self.__valid_data_process(data_dir + Path.TEST_DATA_PATH + suffixes[0], paras_list[0])
+        self.__valid_batches_functions_name = self.__valid_data_process(data_dir + Path.TEST_DATA_PATH + suffixes[1], paras_list[1])
+        self.__valid_batches_variables_name = self.__valid_data_process(data_dir + Path.TEST_DATA_PATH + suffixes[2], paras_list[2])
+        self.__valid_batches_values = self.__valid_data_process(data_dir + Path.TEST_DATA_PATH + suffixes[3], paras_list[3])
     
     '''
     data form
@@ -40,26 +40,26 @@ class Data:
     ]
     
     '''
-    def __train_data_process(self, path):
+    def __train_data_process(self, path, paras):
         train_data = []
         i = 0
         while (os.path.exists(path + str(i))):
             with open(path + str(i), 'r', encoding='utf-8') as f:
                 train_data.extend(eval(f.read()))
             i += 1
-        return self.__data_process(train_data)
+        return self.__data_process(train_data, paras)
         
     '''
     data form same with __train_data_process
     '''
-    def __valid_data_process(self, path):
+    def __valid_data_process(self, path, paras):
         test_data = []
         i = 0
         while (os.path.exists(path + str(i))):
             with open(path + str(i), 'r', encoding='utf-8') as f:
                 test_data.extend(eval(f.read()))
             i += 1
-        valid_data = self.__data_process(test_data)    
+        valid_data = self.__data_process(test_data, paras)    
         
         d0 = valid_data[0]
         d1 = valid_data[1]
@@ -70,7 +70,7 @@ class Data:
         d6 = valid_data[6]        
         
         data_num = int(d0.shape[0])
-        batch_size = self.__paras.valid_batch_size
+        batch_size = paras.valid_batch_size
         batch_num = int(data_num / batch_size)
         
         valid_batches = []    
@@ -92,15 +92,15 @@ class Data:
     ''' 
     fill 0 in spare place
     '''
-    def __data_process(self, data):
+    def __data_process(self, data, paras):
         data_num = len(data)
-        d0 = np.zeros([data_num, self.__paras.nl_len])
-        d1 = np.zeros([data_num, self.__paras.tree_len])
-        d2 = np.zeros([data_num, self.__paras.tree_len])
-        d3 = np.zeros([data_num, self.__paras.tree_len])
-        d4 = np.zeros([data_num, self.__paras.semantic_units_len])
-        d5 = np.zeros([data_num, self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])
-        d6 = np.zeros([data_num, self.__paras.tree_node_num])
+        d0 = np.zeros([data_num, paras.nl_len])
+        d1 = np.zeros([data_num, paras.tree_len])
+        d2 = np.zeros([data_num, paras.tree_len])
+        d3 = np.zeros([data_num, paras.tree_len])
+        d4 = np.zeros([data_num, paras.semantic_units_len])
+        d5 = np.zeros([data_num, paras.semantic_units_len, paras.semantic_unit_children_num])
+        d6 = np.zeros([data_num, paras.correct_predict_class_num])
         
         for i in range(data_num):
             data_point = data[i]
@@ -169,7 +169,7 @@ class Data:
         d5_shuffle = d5[shuffle]
         d6_shuffle = d6[shuffle]
         
-        batch_size = self.__paras.train_batch_size
+        batch_size = self.__train_batch_size
         batch_num = int(data_num / batch_size)
         
         train_batches = []
