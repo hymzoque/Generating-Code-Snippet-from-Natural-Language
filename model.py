@@ -26,9 +26,9 @@ class Model:
         self.input_semantic_units = tf.placeholder(tf.int32, shape=[None, self.__paras.semantic_units_len])
         self.input_children_of_semantic_units = tf.placeholder(tf.int32, shape=[None, self.__paras.semantic_units_len, self.__paras.semantic_unit_children_num])
         # indexes of correct output
-        self.correct_output = tf.placeholder(tf.float32, shape=[None, self.__paras.tree_node_num])
-        # unbalance weights table
-        self.unbalance_weights_table = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, 1])
+        self.correct_output = tf.placeholder(tf.float32, shape=[None, self.__paras.correct_predict_class_num])
+#        # unbalance weights table
+#        self.unbalance_weights_table = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, 1])
         # keep_prob = 1 - dropout
         self.keep_prob = tf.placeholder(tf.float32)
         
@@ -154,34 +154,35 @@ class Model:
         '''
         w1 = tf.get_variable('hidden_fc_w1', shape=[int(full_connect_input.shape[1]), self.__paras.hidden_layer_width], initializer=self.__initializer())
         b1 = tf.get_variable('hidden_fc_b1', shape=[self.__paras.hidden_layer_width], initializer=self.__initializer())
-        w2 = tf.get_variable('hidden_fc_w2', shape=[self.__paras.hidden_layer_width, self.__paras.tree_node_num], initializer=self.__initializer())
-        b2 = tf.get_variable('hidden_fc_b2', shape=[self.__paras.tree_node_num], initializer=self.__initializer())
+        w2 = tf.get_variable('hidden_fc_w2', shape=[self.__paras.hidden_layer_width, self.__paras.correct_predict_class_num], initializer=self.__initializer())
+        b2 = tf.get_variable('hidden_fc_b2', shape=[self.__paras.correct_predict_class_num], initializer=self.__initializer())
         temp = tf.nn.tanh(tf.matmul(full_connect_input, w1) + b1)
         temp = tf.nn.dropout(temp, self.keep_prob)
         # logits
         logits = tf.matmul(temp, w2) + b2
-        # softmax output   [batch size, tree node num]
+        # softmax output   [batch size, output class num]
         self.predicted_output = tf.nn.softmax(logits)
         # log of output, for the precision of probability product
         self.log_predicted_output = tf.log(tf.clip_by_value(self.predicted_output, 1e-100, 1.0))
         ''' 
         output and optimize
         '''        
-        # unbalance weights 
-        # [batch size]
-        unbalance_weights = tf.reduce_max(tf.matmul(self.correct_output, self.unbalance_weights_table), axis=1)
+#        # unbalance weights 
+#        # [batch size]
+#        unbalance_weights = tf.reduce_max(tf.matmul(self.correct_output, self.unbalance_weights_table), axis=1)
         
         # [batch size]
         predict_result = tf.equal(tf.argmax(self.predicted_output, 1), tf.argmax(self.correct_output, 1))
         predict_result = tf.cast(predict_result, tf.float32)
         self.accuracy = tf.reduce_mean(predict_result)
         
-        batch_cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.correct_output, logits=logits, weights=unbalance_weights)
+        batch_cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.correct_output, logits=logits)#, weights=unbalance_weights)
         # weighted loss
         self.cross_entropy = tf.reduce_mean(batch_cross_entropy)
         self.optimize = tf.contrib.opt.AdamWOptimizer(weight_decay=self.__paras.weight_decay, learning_rate=self.__paras.learning_rate).minimize(self.cross_entropy)
         
-        tf.summary.scalar('weighted_loss', self.cross_entropy)
+#        tf.summary.scalar('weighted_loss', self.cross_entropy)
+        tf.summary.scalar('loss', self.cross_entropy)
         tf.summary.scalar('acc', self.accuracy)
         self.merged = tf.summary.merge_all()
         

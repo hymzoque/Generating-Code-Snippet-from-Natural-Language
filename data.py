@@ -11,8 +11,18 @@ class Data:
     def __init__(self, paras):
         self.__paras = paras
         self.__data_dir = paras.dataset_path
-        self.__train_data_process()
-        self.__valid_data_process()
+        
+        suffixes = ['_ast_nodes', '_functions', '_variables', '_values']
+        
+        self.__train_data_ast_nodes = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[0])
+        self.__train_data_functions_name = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[1])
+        self.__train_data_variables_name = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[2])
+        self.__train_data_values = self.__train_data_process(self.__data_dir + Path.TRAIN_DATA_PATH + suffixes[3])
+        
+        self.__valid_batches_ast_nodes = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[0])
+        self.__valid_batches_functions_name = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[1])
+        self.__valid_batches_variables_name = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[2])
+        self.__valid_batches_values = self.__valid_data_process(self.__data_dir + Path.TEST_DATA_PATH + suffixes[3])
     
     '''
     data form
@@ -30,21 +40,19 @@ class Data:
     ]
     
     '''
-    def __train_data_process(self):
-        path = self.__data_dir + Path.TRAIN_DATA_PATH
+    def __train_data_process(self, path):
         train_data = []
         i = 0
         while (os.path.exists(path + str(i))):
             with open(path + str(i), 'r', encoding='utf-8') as f:
                 train_data.extend(eval(f.read()))
             i += 1
-        self.__train_data = self.__data_process(train_data)
+        return self.__data_process(train_data)
         
     '''
     data form same with __train_data_process
     '''
-    def __valid_data_process(self):
-        path = self.__data_dir + Path.TEST_DATA_PATH
+    def __valid_data_process(self, path):
         test_data = []
         i = 0
         while (os.path.exists(path + str(i))):
@@ -78,7 +86,7 @@ class Data:
                     d6[i*batch_size : (i+1)*batch_size, :]
                     ])            
         
-        self.__valid_batches = valid_batches
+        return valid_batches
     
     
     ''' 
@@ -129,6 +137,7 @@ class Data:
         return [d0, d1, d2, d3, d4, d5, d6]
 
     
+    
     '''
     shuffle train data
     @return batch_num x [
@@ -141,14 +150,14 @@ class Data:
         [batch_size x correct_output],
     ]
     '''
-    def get_train_batches(self):
-        d0 = self.__train_data[0]
-        d1 = self.__train_data[1]
-        d2 = self.__train_data[2]
-        d3 = self.__train_data[3]
-        d4 = self.__train_data[4]
-        d5 = self.__train_data[5]
-        d6 = self.__train_data[6]
+    def __get_train_batches(self, train_data):
+        d0 = train_data[0]
+        d1 = train_data[1]
+        d2 = train_data[2]
+        d3 = train_data[3]
+        d4 = train_data[4]
+        d5 = train_data[5]
+        d6 = train_data[6]
         
         data_num = int(d0.shape[0])
         shuffle = np.random.permutation(range(data_num))
@@ -178,26 +187,55 @@ class Data:
         
         return train_batches
     
-    ''' 
-    @return form same with get_train_batches()
-    '''
-    def get_valid_batches(self):
-        return self.__valid_batches
+    def get_train_batches_ast_nodes(self):
+        return self.__get_train_batches(self.__train_data_ast_nodes)
     
-    @staticmethod
-    def __read_unbalance_weights_table(paras):
-        path = paras.dataset_path + Path.UNBALANCE_LOSS_WEIGHT_PATH
-        with open(path, 'r', encoding='utf-8') as f:
-            unbalance_weights_table = eval(f.read())
-        for i in range(len(unbalance_weights_table)):
-            unbalance_weights_table[i] = [unbalance_weights_table[i]]
-        Data.unbalance_weights_table = unbalance_weights_table
+    def get_train_batches_functions_name(self):
+        return self.__get_train_batches(self.__train_data_functions_name)
     
-    ''' [tree node num x 1] '''
-    @staticmethod
-    def get_unbalance_weights_table(paras):
-        if not hasattr(Data, 'unbalance_weights_table'):
-            Data.__read_unbalance_weights_table(paras)
-        return Data.unbalance_weights_table
+    def get_train_batches_variables_name(self):
+        return self.__get_train_batches(self.__train_data_variables_name)
+    
+    def get_train_batches_values(self):
+        return self.__get_train_batches(self.__train_data_values)
+    
+    def get_train_batches_methods(self):
+        return [self.get_train_batches_ast_nodes,
+                self.get_train_batches_functions_name,
+                self.get_train_batches_variables_name,
+                self.get_train_batches_values]
+    
+    def get_valid_batches_ast_nodes(self):
+        return self.__valid_batches_ast_nodes
+    
+    def get_valid_batches_functions_name(self):
+        return self.__valid_batches_functions_name
+    
+    def get_valid_batches_variables_name(self):
+        return self.__valid_batches_variables_name
+    
+    def get_valid_batches_values(self):
+        return self.__valid_batches_values
+    
+    def get_valid_batches_methods(self):
+        return [self.get_valid_batches_ast_nodes,
+                self.get_valid_batches_functions_name,
+                self.get_valid_batches_variables_name,
+                self.get_valid_batches_values]
+#    @staticmethod
+#    def __read_unbalance_weights_table(paras):
+#        path = paras.dataset_path + Path.UNBALANCE_LOSS_WEIGHT_PATH
+#        with open(path, 'r', encoding='utf-8') as f:
+#            unbalance_weights_table = eval(f.read())
+#        for i in range(len(unbalance_weights_table)):
+#            unbalance_weights_table[i] = [unbalance_weights_table[i]]
+#        Data.unbalance_weights_table = unbalance_weights_table
+#    
+#    ''' [tree node num x 1] '''
+#    @staticmethod
+#    def get_unbalance_weights_table(paras):
+#        if not hasattr(Data, 'unbalance_weights_table'):
+#            Data.__read_unbalance_weights_table(paras)
+#        return Data.unbalance_weights_table
     
     

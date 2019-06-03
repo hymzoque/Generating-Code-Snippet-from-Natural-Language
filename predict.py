@@ -456,7 +456,7 @@ class Predict:
         
     
     def __get_ids_from_nl_vocabulary(self, words):
-        return Generator.get_ids_from_nl_vocabulary(words, self.__nl_vocabulary)    
+        return Generator.get_ids_from_vocabulary(words, self.__nl_vocabulary)    
     
     '''
     Beam unit receive a traceable nodes list(which is same defined by class Generator)
@@ -543,7 +543,7 @@ class Predict:
 
 
         def __get_ids_from_tree_nodes_vocabulary(self, nodes):
-            return Generator.get_ids_from_tree_nodes_vocabulary(nodes, self.__tree_nodes_vocabulary)
+            return Generator.get_ids_from_vocabulary(nodes, self.__tree_nodes_vocabulary)
 
 if (__name__ == '__main__'):
     tf.reset_default_graph()
