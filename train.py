@@ -39,7 +39,7 @@ class Train:
     ''' train method '''
     def train(self):
         paras_base = self.__paras_list[0]
-        data_handle = data.Data(paras_base)
+        data_handle = data.Data(self.__paras_list)
         model_dir_list = Path.get_model_path_list(paras_base)
         summary_dir_list = Path.get_summary_path_list(paras_base)
         
@@ -75,6 +75,8 @@ class Train:
                     
                     valid_accuracy, test_summarys = self.__valid(sess, get_valid_batches, nn_model)
                     for i in range(batch_num):
+                        if (i == len(test_summarys)):
+                            break
                         test_writer.add_summary(test_summarys[i], train_loop * batch_num + i)
                     end_time = time.time()
                     
