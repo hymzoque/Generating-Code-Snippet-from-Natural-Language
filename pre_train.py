@@ -97,10 +97,10 @@ class Pre_train:
             self.normalize = self.pre_train_tree_node_embedding.assign(normalized_embedding)
             
 if (__name__ == '__main__'):
-    from setting import Parameters
+    import setting
     tf.reset_default_graph()
-    handle = Pre_train(Parameters.get_conala_paras())
+    handle = Pre_train(setting.Parameters_conala_base())
     tf.reset_default_graph()
-    handle = Pre_train(Parameters.get_hs_paras())
+    handle = Pre_train(setting.Parameters_hs_base())
 
     
