@@ -53,8 +53,8 @@ class Predict:
         graphs = [tf.Graph(), tf.Graph(), tf.Graph(), tf.Graph()]
         models = []
         for graph, paras in zip(graphs, self.__paras_list):
-            graph.as_default()
-            models.append(model.Model(paras))
+            with graph.as_default():
+                models.append(model.Model(paras))
         model_dir_list = Path.get_model_path_list(self.__paras_base)
         
         # predict 
@@ -62,7 +62,8 @@ class Predict:
             sessions = [sess_0, sess_1, sess_2, sess_3]
             # restore model
             for model_dir, session in zip(model_dir_list, sessions):
-                self.__restore_ckpt(session, model_dir)
+                with session.graph.as_default():
+                    self.__restore_ckpt(session, model_dir)
             
             descriptions = self.__read_description()
             
