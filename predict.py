@@ -31,7 +31,7 @@ class Predict:
         
         # vocabulary_list = [ast voc, func voc, var voc, value voc]
         # inverse_vocabulary_list = [inv ast voc, inv func voc, inv var voc, inv value voc]
-        self.__nl_vocabulary, self.__vocabulary_list, self.__invert_vocabulary_list = self.__read_vocabulary()
+        self.__nl_vocabulary, self.__tree_nodes_vocabulary, self.__vocabulary_list, self.__invert_vocabulary_list = self.__read_vocabulary()
         
         self.__test = self.__paras_base.test
             
@@ -137,7 +137,7 @@ class Predict:
                         # the 1st id is the end node
                         log_probability_of_end_node = unit_log_predicted_output[0]
                         # if end the log probability is
-                        temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras.short_sentence_penalty_power)
+                        temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras_base.short_sentence_penalty_power)
                         temp = temp + log_probability_of_end_node
                         
                         self.log.write('length : ' + str(beam_unit.predicted_nodes_num + 1) + ', log probability before penalty : ' + str(temp) + '\n')
@@ -149,7 +149,7 @@ class Predict:
                             self.log.write('unparse error:\n')
                             self.log.write(str(sys.exc_info()))
                         self.log.write('\n')
-                        end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, self.__paras.short_sentence_penalty_power)
+                        end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, self.__paras_base.short_sentence_penalty_power)
                         # if better result appears, update the best result
                         if (end_log_probability > max_log_probability_result.log_probability):
                             max_log_probability_result = Predict.__Beam_Unit(description, unit_traceable_list[:], end_log_probability, beam_unit.predicted_nodes_num + 1, self.__tree_nodes_vocabulary)
@@ -171,7 +171,7 @@ class Predict:
                             
                             # penalty of 'unknwon'
                             if (each_id == 0):
-                                each_probability -= self.__paras.unknwon_log_penalty
+                                each_probability -= self.__paras_base.unknwon_log_penalty
                             
                             # do a grammar check
                             if not (self.__grammar_checker.grammar_no_problem(appendable_layer[0], each_node, appendable_layer[2])):
@@ -192,9 +192,9 @@ class Predict:
                             # new nodes num
                             new_nodes_num = beam_unit.predicted_nodes_num + 1
                             # new probability
-                            temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras.short_sentence_penalty_power)
+                            temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras_base.short_sentence_penalty_power)
                             temp = temp + each_probability
-                            new_probability = temp / math.pow(new_nodes_num, self.__paras.short_sentence_penalty_power)
+                            new_probability = temp / math.pow(new_nodes_num, self.__paras_base.short_sentence_penalty_power)
                             
                             new_beam_unit = self.__Beam_Unit(description, new_traceable_list, new_probability, new_nodes_num, self.__tree_nodes_vocabulary)
                             new_beam.append(new_beam_unit)
@@ -353,8 +353,8 @@ class Predict:
         data_dir = self.__paras_list[0].dataset_path
         with open(data_dir + Path.NL_VOCABULARY_PATH, 'r', encoding='utf-8') as f:
             nl_vocabulary = eval(f.read())
-#        with open(self.__data_dir + Path.TREE_NODES_VOCABULARY_PATH, 'r', encoding='utf-8') as f:
-#            self.__tree_nodes_vocabulary = eval(f.read())
+        with open(data_dir + Path.TREE_NODES_VOCABULARY_PATH, 'r', encoding='utf-8') as f:
+            tree_nodes_vocabulary = eval(f.read())
         vocabulary_list = []
         inv_vocabulary_list = []
         Path_list = [Path.AST_NODES_VOCABULARY_PATH, Path.FUNCTIONS_NAME_VOCABULARY_PATH, Path.VARIABLES_NAME_VOCABULARY_PATH, Path.VALUES_VOCABULARY_PATH]
@@ -365,7 +365,7 @@ class Predict:
                 vocabulary_list.append(vocabulary)
                 inv_vocabulary_list.append(inv_vocabulary)
         
-        return nl_vocabulary, vocabulary_list, inv_vocabulary_list
+        return nl_vocabulary, tree_nodes_vocabulary, vocabulary_list, inv_vocabulary_list
     
     '''
     process method with same form with Generator.__Data_provider
@@ -374,8 +374,8 @@ class Predict:
     def __read_description(self):
         descriptions = []
             
-        if (self.__paras.dataset_path == Path.CONALA_PATH):
-            path = self.__paras.dataset_path + 'conala-test.json'
+        if (self.__paras_base.dataset_path == Path.CONALA_PATH):
+            path = self.__paras_base.dataset_path + 'conala-test.json'
             with open(path, 'r', encoding='utf-8') as f:
                 null = 'null'
                 test_data = eval(f.read())
@@ -389,14 +389,14 @@ class Predict:
                     description.extend(tokenize(description_2))
 
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
-                description_np = np.zeros([self.__paras.nl_len])
+                description_np = np.zeros([self.__paras_base.nl_len])
                 for i in range(len(description_ids)):
                     description_np[i] = description_ids[i]
                 descriptions.append(description_np)
             return descriptions
         
-        if (self.__paras.dataset_path == Path.HS_PATH):
-            path = self.__paras.dataset_path + 'test_hs.in'
+        if (self.__paras_base.dataset_path == Path.HS_PATH):
+            path = self.__paras_base.dataset_path + 'test_hs.in'
             with open(path, 'r', encoding='utf-8') as f:
                 test_in = f.readlines()
             
@@ -404,7 +404,7 @@ class Predict:
                 if (description == ''): continue
                 description = tokenize(description)
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
-                description_np = np.zeros([self.__paras.nl_len])
+                description_np = np.zeros([self.__paras_base.nl_len])
                 for i in range(len(description_ids)):
                     description_np[i] = description_ids[i]
                 descriptions.append(description_np)
@@ -429,12 +429,10 @@ class Predict:
         
         ''' return [0(ast) | 1(func) | 2(var) | 3(value) +] '''
         def get_predict_type(self):
-            assert hasattr(self, '__predict_type')
             return self.__predict_type
         
         ''' return [<parent, depth, position, layer_type>] layer_type=0|1|2|3 same with predict type'''
         def get_appendable_layers(self):
-            assert hasattr(self, '__appendable_layers')
             return self.__appendable_layers
         
         def generate_data(self, paras):
