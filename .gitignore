@@ -105,5 +105,5 @@ venv.bak/
 
 # Generating-Code-Snippet-from-Natural-Language
 generated/
-
-
+prediction/
+evaluate_log

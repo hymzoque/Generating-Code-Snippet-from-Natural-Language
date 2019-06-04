@@ -7,8 +7,8 @@ from setting import Path
 from setting import tokenize
 
 class Evaluate:
-    def __init__(self, paras):
-        self.__paras = paras
+    def __init__(self, paras_list):
+        self.__paras = paras_list[0]
         self.__read_correct_code()
         self.__read_predicted_code()
         self.__evaluate()
@@ -24,7 +24,6 @@ class Evaluate:
             
             for data_unit in test_data:
                 code = data_unit['snippet']
-                if (data_unit['rewritten_intent'] == 'null'): continue
                 self.__correct_code.append(code)
             return
         
@@ -72,4 +71,4 @@ class Evaluate:
 if (__name__ == '__main__'):
     from setting import Parameters
     import sys
-    handle = Evaluate(Parameters.get_paras_from_argv(sys.argv))
+    handle = Evaluate(Parameters.get_paras_list_from_argv(sys.argv))
