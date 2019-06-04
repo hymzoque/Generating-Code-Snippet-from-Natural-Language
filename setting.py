@@ -93,7 +93,7 @@ class Parameters_conala_base(Parameters_base):
     max_predict_time = 50 # avg 27 max 255 
     predict_beam_size = 20
     unknwon_log_penalty = 0
-    short_sentence_penalty = 0.9
+    short_sentence_penalty_power = 0.9
         
     dataset_path = Path.CONALA_PATH
         
@@ -130,7 +130,7 @@ class Parameters_hs_base(Parameters_base):
     max_predict_time = 250 # avg 143 max 723
     predict_beam_size = 20
     unknwon_log_penalty = 0
-    short_sentence_penalty = 1.1
+    short_sentence_penalty_power = 1.1
         
     dataset_path = Path.HS_PATH
 
@@ -140,7 +140,7 @@ class Parameters_hs_ast_nodes(Parameters_hs_base):
 
 class Parameters_hs_functions(Parameters_hs_base):
     train_times = 600
-    correct_predict_class_num = 180
+    correct_predict_class_num = 187
 
 class Parameters_hs_variables(Parameters_hs_base):
     train_times = 600
@@ -148,7 +148,7 @@ class Parameters_hs_variables(Parameters_hs_base):
 
 class Parameters_hs_values(Parameters_hs_base):
     train_times = 600
-    correct_predict_class_num = 297
+    correct_predict_class_num = 289
     
 
 
@@ -163,7 +163,6 @@ class Parameters:
     '''
     @staticmethod
     def get_paras_list_from_argv(argv):
-        # todo
         if ('-h' in argv):
             print('using hearthstone dataset')
             paras_list = [Parameters_conala_ast_nodes(), Parameters_hs_functions(), Parameters_hs_variables(), Parameters_hs_values()]

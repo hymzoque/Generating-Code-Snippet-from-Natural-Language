@@ -509,7 +509,8 @@ class Generator:
     def __check_node_type(self, node, parent, grandparent):
         if 'ast.' in node or node == '<List>' or node == '<Empty_List>' or node == '<None_Node>' or node == '<END_Node>':
             return 'ast_node'
-        if grandparent == 'ast.Call':
+        # def and call
+        if parent == 'ast.FunctionDef' or grandparent == 'ast.Call':
             return 'function_name'
         if parent == 'ast.Attribute' or grandparent == 'ast.Attribute':
             return 'variable_name'
