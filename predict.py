@@ -359,7 +359,7 @@ class Predict:
         inv_vocabulary_list = []
         Path_list = [Path.AST_NODES_VOCABULARY_PATH, Path.FUNCTIONS_NAME_VOCABULARY_PATH, Path.VARIABLES_NAME_VOCABULARY_PATH, Path.VALUES_VOCABULARY_PATH]
         for path in Path_list:
-            with open(data_dir + Path.AST_NODES_VOCABULARY_PATH, 'r', encoding='utf-8') as f:
+            with open(data_dir + path, 'r', encoding='utf-8') as f:
                 vocabulary = eval(f.read())
                 inv_vocabulary = {v:k for k,v in vocabulary.items()}
                 vocabulary_list.append(vocabulary)
