@@ -165,7 +165,7 @@ class Parameters:
     def get_paras_list_from_argv(argv):
         if ('-h' in argv):
             print('using hearthstone dataset')
-            paras_list = [Parameters_conala_ast_nodes(), Parameters_hs_functions(), Parameters_hs_variables(), Parameters_hs_values()]
+            paras_list = [Parameters_hs_ast_nodes(), Parameters_hs_functions(), Parameters_hs_variables(), Parameters_hs_values()]
         elif ('-c' in argv):
             print('using conala dataset')
             paras_list = [Parameters_conala_ast_nodes(), Parameters_conala_functions(), Parameters_conala_variables(), Parameters_conala_values()]
