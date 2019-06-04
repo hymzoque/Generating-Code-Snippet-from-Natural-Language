@@ -31,7 +31,7 @@ class Path:
         path = Path.__MODEL_PATH
         path += Path.get_path_scope(paras)
         path += '/'
-        return [path + 'ast/', path + 'function/', path + 'variable/', path + 'value']
+        return [path + 'ast/', path + 'function/', path + 'variable/', path + 'value/']
     
     __PREDICTION_PATH = 'prediction/'
     '''
@@ -49,7 +49,7 @@ class Path:
         path = Path.__SUMMARY_PATH
         path += Path.get_path_scope(paras)
         path += '/'
-        return [path + 'ast/', path + 'function/', path + 'variable/', path + 'value']
+        return [path + 'ast/', path + 'function/', path + 'variable/', path + 'value/']
     
     @staticmethod
     def get_path_scope(paras):
