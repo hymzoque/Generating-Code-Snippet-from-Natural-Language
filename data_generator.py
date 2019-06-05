@@ -514,7 +514,9 @@ class Generator:
             return 'function_name'
         if parent == 'ast.Attribute' or grandparent == 'ast.Attribute':
             return 'variable_name'
-        return 'value'  
+        if parent == 'ast.arg' or parent == 'ast.keyword':
+            return 'variable_name'
+        return 'value'
 
     def __get_ids_from_nl_vocabulary(self, words):
         return Generator.get_ids_from_vocabulary(words, self.__nl_vocabulary)

@@ -2,9 +2,10 @@
 """
 
 """
+import astunparse
+
 class Grammar:
     def __init__(self):
-        import astunparse
         astunparse.Unparser._Store = Grammar.stub
         astunparse.Unparser._Load = Grammar.stub
         astunparse.Unparser._NoneType = Grammar.stub
@@ -20,8 +21,11 @@ class Grammar:
     def grammar_no_problem(self, parent, child, position):
         # <List> as parent
         # <List> can only have ast. as child
-        if (parent == '<List>' and 'ast.' not in child):
-            return False
+        if (parent == '<List>'):
+            if ('ast.' not in child):
+                return False
+            if not (hasattr(astunparse.Unparser, '_' + child[4:])):
+                return False
         
         # ast Node as parent
         if ('ast.' in parent):
@@ -96,14 +100,23 @@ class Grammar:
         return True
     
     def _ast_arguments(self, child, position):
-        if (position in [-1, 1, 2, 4] and not self.__is_list(child)):
+        if (position in [-1, 4] and not self.__is_list(child)):
             return False
-        if (position in [0, 3] and not (child == 'ast.arg' or child == '<None_Node>')):
+        
+        if (position in [1,2] and not child == '<Empty_List>'):
+            return False
+#        if (position in [0, 3] and not (child == 'ast.arg' or child == '<None_Node>')):
+#            return False
+        if (position in [0, 3] and not (child == '<None_Node>')):
             return False
         return True
     
     def _ast_arg(self, child, position):
-        return False if (position == -1 and not self.__is_str(child)) else True
+        if (position == -1 and not self.__is_str(child)):
+            return False
+        if (position == 0 and not child == '<None_Node>'):
+            return False
+        return True
     
     def _ast_Import(self, child, position):
         return False if not self.__is_list(child) else True

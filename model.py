@@ -131,10 +131,9 @@ class Model:
             semantic_order_features_pooling = self.__max_feature_pooling(semantic_order_features)
         
         # attention
+        attention_result_nl = self.__attention(nl_features, tree_parent_features_pooling)
         if (self.__paras.use_semantic_logic_order):
-            attention_result_nl = self.__attention(nl_features, semantic_order_features_pooling)
-        else:    
-            attention_result_nl = self.__attention(nl_features, tree_parent_features_pooling)
+            attention_result_nl_2 = self.__attention(nl_features, semantic_order_features_pooling)
         attention_result_tree_parent = self.__attention(tree_parent_features, nl_features_pooling)
         if (self.__paras.use_semantic_logic_order):
             attention_result_semantic_order = self.__attention(semantic_order_features, nl_features_pooling)
@@ -146,6 +145,7 @@ class Model:
                 attention_result_tree_parent]
         if (self.__paras.use_semantic_logic_order):
             temp.append(semantic_order_features_pooling)
+            temp.append(attention_result_nl_2)
             temp.append(attention_result_semantic_order)
         full_connect_input = tf.concat(temp, axis = 1)
         

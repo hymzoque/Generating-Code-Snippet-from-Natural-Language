@@ -2,6 +2,8 @@
 """
 
 """
+import os
+
 import bleu_score
 from setting import Path
 from setting import tokenize
@@ -43,8 +45,13 @@ class Evaluate:
         path = Path.get_prediction_path(self.__paras)
         self.__predicted_code = []
         for i in range(len(self.__correct_code)):
-            with open(path + str(i), 'r', encoding='utf-8') as f:
-                self.__predicted_code.append(f.read())
+            if os.path.exists(path + str(i)):
+                with open(path + str(i), 'r', encoding='utf-8') as f:
+                    code = f.read()
+                    code = 'null' if code.strip() == '' else code
+                    self.__predicted_code.append(code)
+            else:
+                self.__predicted_code.append('null')
         
     
     def __evaluate(self):
@@ -72,3 +79,5 @@ if (__name__ == '__main__'):
     from setting import Parameters
     import sys
     handle = Evaluate(Parameters.get_paras_list_from_argv(sys.argv))
+#    import setting
+#    handle = Evaluate([setting.Parameters_hs_base()])

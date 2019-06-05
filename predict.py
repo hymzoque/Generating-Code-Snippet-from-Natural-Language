@@ -617,6 +617,8 @@ class Predict:
                     layer_type = func_
                 elif (parent == 'ast.arg' and position == -1):
                     layer_type = var_
+                elif (parent == 'ast.keyword' and position == -1):
+                    layer_type = var_
                 elif (parent == 'ast.Name'):
                     if position == -1:
                         if grandparent == 'ast.Call':

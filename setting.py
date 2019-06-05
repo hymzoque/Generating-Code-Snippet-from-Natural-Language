@@ -83,17 +83,17 @@ class Parameters_conala_base(Parameters_base):
     tree_len = 255 # max 255
     semantic_units_len = 32 # max 32
     unbalance_weight_power = 0.6
-    min_vocabulary_count = 4
+    min_vocabulary_count = 3
         
-    vocabulary_num = 1191
-    tree_node_num = 574
+    vocabulary_num = 1506
+    tree_node_num = 770
         
     train_times = 300
         
     max_predict_time = 50 # avg 27 max 255 
-    predict_beam_size = 20
+    predict_beam_size = 10
     unknwon_log_penalty = 0
-    short_sentence_penalty_power = 0.9
+    short_sentence_penalty_power = 0.0
         
     dataset_path = Path.CONALA_PATH
         
@@ -104,15 +104,15 @@ class Parameters_conala_ast_nodes(Parameters_conala_base):
 
 class Parameters_conala_functions(Parameters_conala_base):
     train_times = 600
-    correct_predict_class_num = 188
+    correct_predict_class_num = 234
 
 class Parameters_conala_variables(Parameters_conala_base):
     train_times = 600
-    correct_predict_class_num = 116
+    correct_predict_class_num = 196
 
 class Parameters_conala_values(Parameters_conala_base):
     train_times = 600
-    correct_predict_class_num = 239
+    correct_predict_class_num = 316
     
     
 class Parameters_hs_base(Parameters_base):
@@ -128,9 +128,9 @@ class Parameters_hs_base(Parameters_base):
     train_times = 150
         
     max_predict_time = 250 # avg 143 max 723
-    predict_beam_size = 20
+    predict_beam_size = 10
     unknwon_log_penalty = 0
-    short_sentence_penalty_power = 1.1
+    short_sentence_penalty_power = 0.0
         
     dataset_path = Path.HS_PATH
 
@@ -144,11 +144,11 @@ class Parameters_hs_functions(Parameters_hs_base):
 
 class Parameters_hs_variables(Parameters_hs_base):
     train_times = 600
-    correct_predict_class_num = 96
+    correct_predict_class_num = 122
 
 class Parameters_hs_values(Parameters_hs_base):
     train_times = 600
-    correct_predict_class_num = 289
+    correct_predict_class_num = 256
     
 
 
