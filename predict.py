@@ -608,18 +608,23 @@ class Predict:
                 position = appendable_layer[2]
                 grandparent = appendable_layer[3]
                 
-                if (parent == 'ast.NameConst' or parent == 'ast.Str' or parent == 'ast.Num'):
+                if (parent == 'ast.NameConstant' or parent == 'ast.Str' or parent == 'ast.Num'):
                     layer_type = value_
                 elif (parent == 'ast.ClassDef' and position == -1):
                     layer_type = value_
                 
                 elif (parent == 'ast.FunctionDef' and position == -1):
                     layer_type = func_
+                elif (parent == 'ast.arg' and position == -1):
+                    layer_type = var_
                 elif (parent == 'ast.Name'):
-                    if (position == -1 and grandparent == 'ast.Call'):
-                        layer_type = func_
-                    elif (position == -1 and grandparent == 'ast.Attribute'):
-                        layer_type = var_
+                    if position == -1:
+                        if grandparent == 'ast.Call':
+                            layer_type = func_
+                        elif grandparent == 'ast.Attribute':
+                            layer_type = var_
+                        else:
+                            layer_type = value_  
                     else:
                         layer_type = ast_
                 elif (parent == 'ast.Attribute'):
