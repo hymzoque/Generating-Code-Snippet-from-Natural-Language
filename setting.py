@@ -92,7 +92,7 @@ class Parameters_conala_base(Parameters_base):
         
     max_predict_time = 50 # avg 27 max 255 
     predict_beam_size = 10
-    unknwon_log_penalty = 0
+    unknwon_log_penalty = 2
     short_sentence_penalty_power = 0.0
         
     dataset_path = Path.CONALA_PATH

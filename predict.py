@@ -6,7 +6,7 @@ import tensorflow as tf
 import numpy as np
 import math
 import os
-import time
+import re
 import datetime
 import ast
 import astunparse
@@ -211,6 +211,8 @@ class Predict:
         try:
             # code
             code = self.__traceable_list_to_code(max_log_probability_result.traceable_list)
+            if (self.__paras_base.dataset_path == Path.HS_PATH):
+                code = self.__hs(code, description)
             # write out
             with open(write_path, 'w', encoding='utf-8') as f:
                 f.write(code)
@@ -413,6 +415,15 @@ class Predict:
     
     def __get_ids_from_nl_vocabulary(self, words):
         return Generator.get_ids_from_vocabulary(words, self.__nl_vocabulary)    
+    
+    def __hs(self, code, description):
+        d = description.index('NAME_END')
+        n = description[:d]
+        n = [w.capitalize() for w in n]
+        name = ''.join(n)
+        code = re.sub('(?<=class )(.+?)(?=\()', name, code)
+        code = re.sub('(?<=super\(\).__init__\(\')(.+?)(?=\')', name, code)
+        return code
     
     '''
     Beam unit receive a traceable nodes list(which is same defined by class Generator)
