@@ -64,7 +64,7 @@ class Train:
                 train_writer = tf.summary.FileWriter(summary_dir + 'train', sess.graph)
                 test_writer = tf.summary.FileWriter(summary_dir + 'test', sess.graph)
                 # train loop
-                best_accuracy = 0
+#                best_accuracy = 0
                 for train_loop in range(paras.train_times):
                     start_time = time.time()
                     train_summarys = self.__train_once(paras, sess, get_train_batches, nn_model)
@@ -81,13 +81,13 @@ class Train:
                     end_time = time.time()
                     
                     log.write('epoch ' + str(train_loop + 1) + ' :\n')
-                    log.write('valid accuracy is : ' + str(valid_accuracy) + '\n')
+#                    log.write('valid accuracy is : ' + str(valid_accuracy) + '\n')
                     log.write('        time used : ' + str(end_time - start_time) + '\n')
                     # save model if accuracy get better
-                    if (valid_accuracy > best_accuracy):
-                        self.__save_ckpt(model_dir, sess)
-                        best_accuracy = valid_accuracy
-                        log.write('better result found\n')
+#                    if (valid_accuracy > best_accuracy):
+#                        best_accuracy = valid_accuracy
+#                        log.write('better result found\n')
+                    self.__save_ckpt(model_dir, sess)
                     log.write('\n')
                     log.flush()            
             log.write('\n')

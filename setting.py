@@ -64,7 +64,7 @@ class Parameters_base:
     tree_node_embedding_size = 64
     cnn_deepth = 12
     deep_CNN_kernel_size = [2, 3]
-    keep_prob = 0.5
+    keep_prob = 0.4
     hidden_layer_width = 768
     
     learning_rate = 1e-4
@@ -93,7 +93,7 @@ class Parameters_conala_base(Parameters_base):
     max_predict_time = 50 # avg 27 max 255 
     predict_beam_size = 10
     unknwon_log_penalty = 2
-    short_sentence_penalty_power = 0.0
+    short_sentence_penalty_power = 0.5
         
     dataset_path = Path.CONALA_PATH
         
@@ -103,15 +103,15 @@ class Parameters_conala_ast_nodes(Parameters_conala_base):
     correct_predict_class_num = 83
 
 class Parameters_conala_functions(Parameters_conala_base):
-    train_times = 600
+    train_times = 500
     correct_predict_class_num = 234
 
 class Parameters_conala_variables(Parameters_conala_base):
-    train_times = 600
+    train_times = 500
     correct_predict_class_num = 196
 
 class Parameters_conala_values(Parameters_conala_base):
-    train_times = 600
+    train_times = 500
     correct_predict_class_num = 316
     
     
@@ -127,10 +127,10 @@ class Parameters_hs_base(Parameters_base):
         
     train_times = 150
         
-    max_predict_time = 250 # avg 143 max 723
+    max_predict_time = 220 # avg 143 max 723
     predict_beam_size = 10
     unknwon_log_penalty = 0
-    short_sentence_penalty_power = 0.0
+    short_sentence_penalty_power = 0.5
         
     dataset_path = Path.HS_PATH
 
@@ -139,15 +139,15 @@ class Parameters_hs_ast_nodes(Parameters_hs_base):
     correct_predict_class_num = 54
 
 class Parameters_hs_functions(Parameters_hs_base):
-    train_times = 600
+    train_times = 400
     correct_predict_class_num = 187
 
 class Parameters_hs_variables(Parameters_hs_base):
-    train_times = 600
+    train_times = 400
     correct_predict_class_num = 122
 
 class Parameters_hs_values(Parameters_hs_base):
-    train_times = 600
+    train_times = 400
     correct_predict_class_num = 256
     
 

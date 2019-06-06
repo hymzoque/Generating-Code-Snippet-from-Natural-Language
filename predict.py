@@ -421,10 +421,11 @@ class Predict:
     def __hs(self, code, description_str):
         d = description_str.index('NAME_END')
         n = description_str[:d]
+        name_2 = ' '.join(n)
         n = [w.capitalize() for w in n]
-        name = ''.join(n)
-        code = re.sub('(?<=class )(.+?)(?=\()', name, code)
-        code = re.sub('(?<=super\(\).__init__\(\')(.+?)(?=\')', name, code)
+        name_1 = ''.join(n)
+        code = re.sub('(?<=class )(.+?)(?=\()', name_1, code)
+        code = re.sub('(?<=super\(\).__init__\(\')(.+?)(?=\')', name_2, code)
         return code
     
     '''
