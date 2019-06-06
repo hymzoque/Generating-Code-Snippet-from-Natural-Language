@@ -65,21 +65,21 @@ class Predict:
                 with session.graph.as_default():
                     self.__restore_ckpt(session, model_dir)
             
-            descriptions = self.__read_description()
+            descriptions, description_strs = self.__read_description()
             
             if (self.__test):
                 self.log.write('just testing\n')
-                self.__predict_one_sentence(descriptions[0], 'test_prediction', sessions, models)
+                self.__predict_one_sentence(descriptions[0], 'test_prediction', sessions, models, description_strs[0])
             else:
                 for n, description in enumerate(descriptions):
                     write_path = self.__prediction_dir + str(n)
                     self.log.write('num : ' + str(n) + '\n')
-                    self.__predict_one_sentence(description, write_path, sessions, models)
+                    self.__predict_one_sentence(description, write_path, sessions, models, description_strs[n])
         self.log.write('\n')
         self.log.close()
     
     ''' predict one sentence '''
-    def __predict_one_sentence(self, description, write_path, sessions, models):
+    def __predict_one_sentence(self, description, write_path, sessions, models, description_str):
         ast_ = 0
 #        func_, var_, value_ = 1, 2, 3
         
@@ -212,7 +212,7 @@ class Predict:
             # code
             code = self.__traceable_list_to_code(max_log_probability_result.traceable_list)
             if (self.__paras_base.dataset_path == Path.HS_PATH):
-                code = self.__hs(code, description)
+                code = self.__hs(code, description_str)
             # write out
             with open(write_path, 'w', encoding='utf-8') as f:
                 f.write(code)
@@ -375,7 +375,7 @@ class Predict:
     '''
     def __read_description(self):
         descriptions = []
-            
+        description_strs = []
         if (self.__paras_base.dataset_path == Path.CONALA_PATH):
             path = self.__paras_base.dataset_path + 'conala-test.json'
             with open(path, 'r', encoding='utf-8') as f:
@@ -394,8 +394,9 @@ class Predict:
                 description_np = np.zeros([self.__paras_base.nl_len])
                 for i in range(len(description_ids)):
                     description_np[i] = description_ids[i]
+                description_strs.append(description)
                 descriptions.append(description_np)
-            return descriptions
+            return descriptions, description_strs
         
         if (self.__paras_base.dataset_path == Path.HS_PATH):
             path = self.__paras_base.dataset_path + 'test_hs.in'
@@ -409,16 +410,17 @@ class Predict:
                 description_np = np.zeros([self.__paras_base.nl_len])
                 for i in range(len(description_ids)):
                     description_np[i] = description_ids[i]
+                description_strs.append(description)
                 descriptions.append(description_np)
-            return descriptions
+            return descriptions, description_strs
         
     
     def __get_ids_from_nl_vocabulary(self, words):
         return Generator.get_ids_from_vocabulary(words, self.__nl_vocabulary)    
     
-    def __hs(self, code, description):
-        d = description.index('NAME_END')
-        n = description[:d]
+    def __hs(self, code, description_str):
+        d = description_str.index('NAME_END')
+        n = description_str[:d]
         n = [w.capitalize() for w in n]
         name = ''.join(n)
         code = re.sub('(?<=class )(.+?)(?=\()', name, code)
