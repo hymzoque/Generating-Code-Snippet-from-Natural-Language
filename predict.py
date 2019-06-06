@@ -18,12 +18,16 @@ from data_generator import Generator
 from grammar import Grammar
 
 class Predict:
-    def __init__(self, paras_list):
+    def __init__(self, paras_list, predict_train=False):
+        if (predict_train):
+            self.__read_description = self.__read_description_train
         self.__paras_list = paras_list
         self.__paras_base = paras_list[0]
         self.__grammar_checker = Grammar()
         
         self.__prediction_dir = Path.get_prediction_path(self.__paras_base)
+        if (predict_train):
+            self.__prediction_dir += '_train'
         if not os.path.exists(self.__prediction_dir):
             os.makedirs(self.__prediction_dir)
             
@@ -34,7 +38,8 @@ class Predict:
         self.__nl_vocabulary, self.__tree_nodes_vocabulary, self.__vocabulary_list, self.__invert_vocabulary_list = self.__read_vocabulary()
         
         self.__test = self.__paras_base.test
-            
+    
+        
             
     ''' predict method '''
     def predict(self):
@@ -663,10 +668,54 @@ class Predict:
         
         def __get_ids_from_tree_nodes_vocabulary(self, nodes):
             return Generator.get_ids_from_vocabulary(nodes, self.__tree_nodes_vocabulary)
+    
+    def __read_description_train(self):
+        descriptions = []
+        description_strs = []
+        if (self.__paras_base.dataset_path == Path.CONALA_PATH):
+            path = self.__paras_base.dataset_path + 'conala-train.json'
+            with open(path, 'r', encoding='utf-8') as f:
+                null = 'null'
+                test_data = eval(f.read())
+            
+            for data_unit in test_data:
+                description_1 = data_unit['intent']
+                description_2 = data_unit['rewritten_intent']
+                
+                description = tokenize(description_1)
+                if not (description_2 == 'null') : 
+                    description.extend(tokenize(description_2))
 
+                description_ids = self.__get_ids_from_nl_vocabulary(description)
+                description_np = np.zeros([self.__paras_base.nl_len])
+                for i in range(len(description_ids)):
+                    description_np[i] = description_ids[i]
+                description_strs.append(description)
+                descriptions.append(description_np)
+            return descriptions, description_strs
+        
+        if (self.__paras_base.dataset_path == Path.HS_PATH):
+            path = self.__paras_base.dataset_path + 'train_hs.in'
+            with open(path, 'r', encoding='utf-8') as f:
+                test_in = f.readlines()
+            
+            for description in test_in:
+                if (description == ''): continue
+                description = tokenize(description)
+                description_ids = self.__get_ids_from_nl_vocabulary(description)
+                description_np = np.zeros([self.__paras_base.nl_len])
+                for i in range(len(description_ids)):
+                    description_np[i] = description_ids[i]
+                description_strs.append(description)
+                descriptions.append(description_np)
+            return descriptions, description_strs
 if (__name__ == '__main__'):
     tf.reset_default_graph()
+    
     from setting import Parameters
     import sys
     handle = Predict(Parameters.get_paras_list_from_argv(sys.argv))
     handle.predict()
+    
+#    handle = Predict(Parameters.get_paras_list_from_argv(['-h', '-s']), predict_train=True)
+#    handle.predict()
