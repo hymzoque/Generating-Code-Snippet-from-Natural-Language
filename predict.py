@@ -43,7 +43,7 @@ class Predict:
             
     ''' predict method '''
     def predict(self):
-        self.log = open('predict_log', mode='a')
+        self.log = open('predict_log_' + Path.get_path_scope(self.__paras_base), mode='w')
         self.log.write(str(datetime.datetime.now()) + '\n')
         self.log.write('start predicting\n')
         self.log = open('predict_log', mode='a')
