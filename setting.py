@@ -64,7 +64,7 @@ class Parameters_base:
     tree_node_embedding_size = 64
     cnn_deepth = 12
     deep_CNN_kernel_size = [2, 3]
-    keep_prob = 0.4
+    keep_prob = 0.6
     hidden_layer_width = 768
     
     learning_rate = 1e-4
@@ -79,21 +79,24 @@ class Parameters_base:
     test = False
 
 class Parameters_conala_base(Parameters_base):
-    nl_len = 78 # max 78
+    vocabulary_embedding_size = 100
+    tree_node_embedding_size = 100
+    
+    nl_len = 62 # max 62
     tree_len = 255 # max 255
     semantic_units_len = 32 # max 32
     unbalance_weight_power = 0.6
-    min_vocabulary_count = 3
+    min_vocabulary_count = 2
         
-    vocabulary_num = 1506
-    tree_node_num = 770
+    vocabulary_num = 1526
+    tree_node_num = 1175
         
-    train_times = 300
+    train_times = 250
         
     max_predict_time = 50 # avg 27 max 255 
-    predict_beam_size = 10
+    predict_beam_size = 5
     unknwon_log_penalty = 2
-    short_sentence_penalty_power = 0.5
+    short_sentence_penalty_power = 0.7
         
     dataset_path = Path.CONALA_PATH
         
@@ -104,15 +107,15 @@ class Parameters_conala_ast_nodes(Parameters_conala_base):
 
 class Parameters_conala_functions(Parameters_conala_base):
     train_times = 500
-    correct_predict_class_num = 234
+    correct_predict_class_num = 313
 
 class Parameters_conala_variables(Parameters_conala_base):
     train_times = 500
-    correct_predict_class_num = 196
+    correct_predict_class_num = 309
 
 class Parameters_conala_values(Parameters_conala_base):
     train_times = 500
-    correct_predict_class_num = 316
+    correct_predict_class_num = 593
     
     
 class Parameters_hs_base(Parameters_base):
@@ -128,9 +131,9 @@ class Parameters_hs_base(Parameters_base):
     train_times = 150
         
     max_predict_time = 220 # avg 143 max 723
-    predict_beam_size = 10
+    predict_beam_size = 5
     unknwon_log_penalty = 0
-    short_sentence_penalty_power = 0.5
+    short_sentence_penalty_power = 0.7
         
     dataset_path = Path.HS_PATH
 

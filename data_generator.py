@@ -132,9 +132,11 @@ class Generator:
                 description_1 = data_unit['intent']
                 description_2 = data_unit['rewritten_intent']
                 
-                description = tokenize(description_1)
+                
                 if not (description_2 == 'null') : 
-                    description.extend(tokenize(description_2))
+                    description = tokenize(description_2)
+                else:
+                    description = tokenize(description_1)
                 
                 ast_root = ast.parse(data_unit['snippet'])
                 yield description, ast_root 
@@ -512,6 +514,8 @@ class Generator:
         # def and call
         if parent == 'ast.FunctionDef' or grandparent == 'ast.Call':
             return 'function_name'
+        if parent == 'ast.Str' or parent == 'ast.Num' or parent == 'ast.NameConstant':
+            return 'value'
         if parent == 'ast.Attribute' or grandparent == 'ast.Attribute':
             return 'variable_name'
         if parent == 'ast.arg' or parent == 'ast.keyword':

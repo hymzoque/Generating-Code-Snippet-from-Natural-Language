@@ -4,6 +4,8 @@
 """
 import nltk
 import os
+import ast
+import astunparse
 
 from setting import Path
 from setting import tokenize
@@ -29,6 +31,7 @@ class Evaluate:
             
             for data_unit in test_data:
                 code = data_unit['snippet']
+                code = astunparse.unparse(ast.parse(code))
                 self.__correct_code.append(code)
             return
         
@@ -41,6 +44,7 @@ class Evaluate:
                 if (code == ''): continue
                 code = code.replace('§', '\n')
                 code = code.replace('\ ', '')
+                code = astunparse.unparse(ast.parse(code))
                 self.__correct_code.append(code)
             return
     
@@ -89,6 +93,7 @@ class Evaluate:
             
             for data_unit in test_data:
                 code = data_unit['snippet']
+                code = astunparse.unparse(ast.parse(code))
                 self.__correct_code.append(code)
             return
         
@@ -101,6 +106,7 @@ class Evaluate:
                 if (code == ''): continue
                 code = code.replace('§', '\n')
                 code = code.replace('\ ', '')
+                code = astunparse.unparse(ast.parse(code))
                 self.__correct_code.append(code)
             return
     

@@ -391,9 +391,11 @@ class Predict:
                 description_1 = data_unit['intent']
                 description_2 = data_unit['rewritten_intent']
                 
-                description = tokenize(description_1)
+                
                 if not (description_2 == 'null') : 
-                    description.extend(tokenize(description_2))
+                    description = tokenize(description_2)
+                else:
+                    description = tokenize(description_1)
 
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
                 description_np = np.zeros([self.__paras_base.nl_len])
@@ -682,9 +684,11 @@ class Predict:
                 description_1 = data_unit['intent']
                 description_2 = data_unit['rewritten_intent']
                 
-                description = tokenize(description_1)
+                
                 if not (description_2 == 'null') : 
-                    description.extend(tokenize(description_2))
+                    description = tokenize(description_2)
+                else:
+                    description = tokenize(description_1)
 
                 description_ids = self.__get_ids_from_nl_vocabulary(description)
                 description_np = np.zeros([self.__paras_base.nl_len])
