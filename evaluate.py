@@ -128,4 +128,4 @@ if (__name__ == '__main__'):
     import sys
     handle = Evaluate(Parameters.get_paras_list_from_argv(sys.argv))
 
-#    handle = Evaluate(Parameters.get_paras_list_from_argv(['-h', '-s']))
+#    handle = Evaluate(Parameters.get_paras_list_from_argv(['-h', '-s']), predict_train=True)
