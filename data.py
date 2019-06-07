@@ -23,7 +23,12 @@ class Data:
         self.__valid_batches_functions_name = self.__valid_data_process(data_dir + Path.TEST_DATA_PATH + suffixes[1], paras_list[1])
         self.__valid_batches_variables_name = self.__valid_data_process(data_dir + Path.TEST_DATA_PATH + suffixes[2], paras_list[2])
         self.__valid_batches_values = self.__valid_data_process(data_dir + Path.TEST_DATA_PATH + suffixes[3], paras_list[3])
-    
+        
+        self.__unbalance_class_weights_ast_nodes = self.__read_unbalance_class_weights(data_dir + Path.UNBALANCE_CLASS_WEIGHTS_PATH + suffixes[0])
+        self.__unbalance_class_weights_functions_name = self.__read_unbalance_class_weights(data_dir + Path.UNBALANCE_CLASS_WEIGHTS_PATH + suffixes[1])
+        self.__unbalance_class_weights_variables_name = self.__read_unbalance_class_weights(data_dir + Path.UNBALANCE_CLASS_WEIGHTS_PATH + suffixes[2])
+        self.__unbalance_class_weights_values = self.__read_unbalance_class_weights(data_dir + Path.UNBALANCE_CLASS_WEIGHTS_PATH + suffixes[3])
+        
     '''
     data form
     [
@@ -222,20 +227,21 @@ class Data:
                 self.get_valid_batches_functions_name,
                 self.get_valid_batches_variables_name,
                 self.get_valid_batches_values]
-#    @staticmethod
-#    def __read_unbalance_weights_table(paras):
-#        path = paras.dataset_path + Path.UNBALANCE_CLASS_WEIGHTS_PATH
-#        with open(path, 'r', encoding='utf-8') as f:
-#            unbalance_weights_table = eval(f.read())
-#        for i in range(len(unbalance_weights_table)):
-#            unbalance_weights_table[i] = [unbalance_weights_table[i]]
-#        Data.unbalance_weights_table = unbalance_weights_table
-#    
-#    ''' [tree node num x 1] '''
-#    @staticmethod
-#    def get_unbalance_weights_table(paras):
-#        if not hasattr(Data, 'unbalance_weights_table'):
-#            Data.__read_unbalance_weights_table(paras)
-#        return Data.unbalance_weights_table
+        
+    def get_unbalance_class_weights_ast_nodes(self):
+        return self.__unbalance_class_weights_ast_nodes
+    def get_unbalance_class_weights_functions_name(self):
+        return self.__unbalance_class_weights_functions_name
+    def get_unbalance_class_weights_variables_name(self):
+        return self.__unbalance_class_weights_variables_name
+    def get_unbalance_class_weights_values(self):
+        return self.__unbalance_class_weights_values
+    def get_unbalance_class_weights_methods(self):
+        return [self.get_unbalance_class_weights_ast_nodes,
+                self.get_unbalance_class_weights_functions_name,
+                self.get_unbalance_class_weights_variables_name,
+                self.get_unbalance_class_weights_values]
     
-    
+    def __read_unbalance_class_weights(self, path):
+        with open(path, 'r', encoding='utf-8') as f:
+            return eval(f.read())

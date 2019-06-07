@@ -15,27 +15,7 @@ from setting import Path
 class Train:
     def __init__(self, paras_list):
         self.__paras_list = paras_list
-        
-#        if (paras.test):
-#            self.train = self.test_train
-        
-#    ''' test the training and valid time of one batch '''
-#    def test_train(self):
-#        data_handle = data.Data(self.__paras)
-#        nn_model = model.Model(self.__paras)
-#        with tf.Session(config=self.__gpu_config()) as sess:
-#            self.__get_ckpt(sess, nn_model)
-#            start = time.time()
-#            
-#            self.__train_once(sess, data_handle, nn_model)
-#            mid = time.time()
-#            print('train time used : ' + str(mid - start))
-#            
-#            self.__valid(sess, data_handle, nn_model)
-#            end = time.time()
-#            print('valid time used : ' + str(end - mid))
-##            self.__save_ckpt(sess)
-            
+                    
     ''' train method '''
     def train(self):
         paras_base = self.__paras_list[0]
@@ -50,8 +30,11 @@ class Train:
         log.write(', use_pre_train=' + str(paras_base.use_pre_train))
         log.write(', use_semantic=' + str(paras_base.use_semantic_logic_order) + '\n')
         
-        for paras, model_dir, summary_dir, get_train_batches, get_valid_batches in zip(self.__paras_list, model_dir_list, summary_dir_list, 
-                                                                                       data_handle.get_train_batches_methods(), data_handle.get_valid_batches_methods()):
+        for paras, model_dir, summary_dir, get_train_batches, get_valid_batches, get_class_weights in zip(
+                self.__paras_list, model_dir_list, summary_dir_list, 
+                data_handle.get_train_batches_methods(), 
+                data_handle.get_valid_batches_methods(), 
+                data_handle.get_unbalance_class_weights_methods()):
             log.write('training ' + paras.__class__.__name__ + ' for ' + str(paras.train_times) + ' times\n')
             
             with tf.Graph().as_default(), tf.Session(config=self.__gpu_config()) as sess:
@@ -67,13 +50,13 @@ class Train:
                 best_accuracy = 0
                 for train_loop in range(paras.train_times):
                     start_time = time.time()
-                    train_summarys = self.__train_once(paras, sess, get_train_batches, nn_model)
+                    train_summarys = self.__train_once(paras, sess, nn_model, get_train_batches, get_class_weights)
                     
                     batch_num = len(train_summarys)
                     for i in range(batch_num):
                         train_writer.add_summary(train_summarys[i], train_loop * batch_num + i)
                     
-                    valid_accuracy, test_summarys = self.__valid(sess, get_valid_batches, nn_model)
+                    valid_accuracy, test_summarys = self.__valid(sess, nn_model, get_valid_batches, get_class_weights)
                     for i in range(batch_num):
                         if (i == len(test_summarys)):
                             break
@@ -102,7 +85,7 @@ class Train:
         return config            
                 
     ''' train one epoch '''
-    def __train_once(self, paras, session, get_train_batches, model):
+    def __train_once(self, paras, session, model, get_train_batches, get_class_weights):
         # train
         train_batches = get_train_batches()
         batch_num = len(train_batches)
@@ -118,14 +101,14 @@ class Train:
                             model.input_semantic_units : train_batches[count][4],
                             model.input_children_of_semantic_units : train_batches[count][5],
                             model.correct_output : train_batches[count][6],
-                            model.keep_prob : paras.keep_prob
-                            #,model.unbalance_weights_table : data.Data.get_unbalance_weights_table(self.__paras)
+                            model.keep_prob : paras.keep_prob,
+                            model.unbalance_class_weights : get_class_weights()
                             })
             summarys.append(summary)
         return summarys
     
     ''' '''
-    def __valid(self, session, get_valid_batches, model):
+    def __valid(self, session, model, get_valid_batches, get_class_weights):
         valid_batches = get_valid_batches()
         batch_num = len(valid_batches)
         summarys = []
@@ -141,8 +124,8 @@ class Train:
                             model.input_semantic_units : valid_batches[count][4],
                             model.input_children_of_semantic_units : valid_batches[count][5],
                             model.correct_output : valid_batches[count][6],
-                            model.keep_prob : 1.0
-                            #,model.unbalance_weights_table : data.Data.get_unbalance_weights_table(self.__paras)
+                            model.keep_prob : 1.0,
+                            model.unbalance_class_weights : get_class_weights()
                             })
             summarys.append(summary)
             accuracy += batch_accuracy
