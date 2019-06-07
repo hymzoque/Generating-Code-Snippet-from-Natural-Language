@@ -28,7 +28,7 @@ class Model:
         # indexes of correct output
         self.correct_output = tf.placeholder(tf.float32, shape=[None, self.__paras.correct_predict_class_num])
 #        # unbalance weights table
-        self.unbalance_class_weights = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, 1])
+        self.unbalance_class_weights = tf.placeholder(tf.float32, shape=[self.__paras.correct_predict_class_num, 1])
         # keep_prob = 1 - dropout
         self.keep_prob = tf.placeholder(tf.float32)
         
