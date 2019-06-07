@@ -27,7 +27,7 @@ class Predict:
         
         self.__prediction_dir = Path.get_prediction_path(self.__paras_base)
         if (predict_train):
-            self.__prediction_dir += '_train'
+            self.__prediction_dir += '_train/'
         if not os.path.exists(self.__prediction_dir):
             os.makedirs(self.__prediction_dir)
             
