@@ -7,7 +7,7 @@ generate pre train data
 import ast
 import json
 import os
-#import numpy as np
+import numpy as np
 
 from setting import Path
 from setting import tokenize
@@ -59,8 +59,7 @@ class Generator:
         self.__write_function_name_vocabulary()
         self.__write_variable_name_vocabulary()
         self.__write_values_vocabulary()
-        
-#        self.__write_unbalance_weights_table()
+        self.__write_unbalance_weights_table()
         
         # split the data file to several parts
         once_write_num = 5000
@@ -405,6 +404,7 @@ class Generator:
         nl_vocabulary_with_count = {}
         tree_nodes_vocabulary_with_count = {}
         
+        ast_nodes_vocabulary_with_count = {}
         function_name_vocabulary_with_count = {}
         var_name_vocabulary_with_count = {}
         value_vocabulary_with_count = {}
@@ -436,9 +436,12 @@ class Generator:
                     node_type = self.__check_node_type(node, parent, grandparent)
                     # ast node
                     if node_type == 'ast_node':
-                        if node not in self.__ast_nodes_vocabulary:
-                            self.__ast_nodes_vocabulary[node] = len(self.__ast_nodes_vocabulary)
+                        if node not in ast_nodes_vocabulary_with_count:
+                            ast_nodes_vocabulary_with_count[node] = 1
+                        else:
+                            ast_nodes_vocabulary_with_count[node] += 1
                         continue
+
                     # function name
                     if node_type == 'function_name':
                         if node not in function_name_vocabulary_with_count:
@@ -468,42 +471,99 @@ class Generator:
         for node, count in tree_nodes_vocabulary_with_count.items():
             if (count >= self.__min_vocabulary_count): 
                 self.__tree_nodes_vocabulary[node] = len(self.__tree_nodes_vocabulary)
-        ''' ast node already done '''
+                
+        
+        ''' ast node '''
+        min_count_soft_ast = 0.0
+        for node, count in ast_nodes_vocabulary_with_count.items():
+            self.__ast_nodes_vocabulary[node] = len(self.__ast_nodes_vocabulary)
+            if count <= self.__min_vocabulary_count:
+                min_count_soft_ast += 1
+        ast_nodes_vocabulary_with_count['<END_Node>'] = self.__data_num
+        ast_nodes_vocabulary_with_count = [[n, c] for n, c in ast_nodes_vocabulary_with_count.items()]
+        ast_nodes_vocabulary_with_count.sort(key=lambda u : u[1])
+
         ''' function name '''
+        min_count_soft_func = 0.0
+        unknwon_num = 0
         for func, count in function_name_vocabulary_with_count.items():
             if (count >= self.__min_vocabulary_count):
                 self.__functions_name_vocabulary[func] = len(self.__functions_name_vocabulary)
+                if count <= self.__min_vocabulary_count:
+                    min_count_soft_func += 1
+            else:
+                unknwon_num += 1
+        function_name_vocabulary_with_count['unknwon'] = unknwon_num
+        temp = []
+        for f, c in function_name_vocabulary_with_count.items():
+            if c >= self.__min_vocabulary_count:
+                temp.append([f, c])
+        function_name_vocabulary_with_count = temp
+        function_name_vocabulary_with_count.sort(key=lambda u : u[1])
+        
         ''' variable name '''
+        min_count_soft_var = 0.0
+        unknwon_num = 0
         for var, count in var_name_vocabulary_with_count.items():
             if (count >= self.__min_vocabulary_count):
                 self.__variables_name_vocabulary[var] = len(self.__variables_name_vocabulary)
+                if count <= self.__min_vocabulary_count:
+                    min_count_soft_var += 1                
+            else:
+                unknwon_num += 1
+        var_name_vocabulary_with_count['unknwon'] = unknwon_num
+        temp = []
+        for v, c in var_name_vocabulary_with_count.items():
+            if c >= self.__min_vocabulary_count:
+                temp.append([v, c])
+        var_name_vocabulary_with_count = temp
+        var_name_vocabulary_with_count.sort(key=lambda u : u[1])
+                
         ''' value '''
+        min_count_soft_value = 0.0
+        unknwon_num = 0
         for v, count in value_vocabulary_with_count.items():
             if (count >= self.__min_vocabulary_count):
                 self.__values_vocabulary[v] = len(self.__values_vocabulary)
+                if count <= self.__min_vocabulary_count:
+                    min_count_soft_value += 1                
+            else:
+                unknwon_num += 1
+        value_vocabulary_with_count['unknwon'] = unknwon_num
+        temp = []
+        for v, c in value_vocabulary_with_count.items():
+            if c >= self.__min_vocabulary_count:
+                temp.append([v, c])
+        value_vocabulary_with_count = temp
+        value_vocabulary_with_count.sort(key=lambda u : u[1])
         
-#        ''' unbalance weights '''
-#        self.__unbalance_weights_table = np.zeros(len(self.__tree_nodes_vocabulary))
-#        for node, count in tree_nodes_vocabulary_with_count.items():
-#            if (count >= self.__min_vocabulary_count):
-#                self.__unbalance_weights_table[self.__tree_nodes_vocabulary[node]] = 1.0 / count
-#            else:
-#                # 'unknwon'
-#                self.__unbalance_weights_table[0] += count
-#        if not self.__unbalance_weights_table[0] == 0:
-#            self.__unbalance_weights_table[0] = np.power(1.0 / self.__unbalance_weights_table[0], self.__paras.unbalance_weight_power)
-#        # '<END_Node>'
-#        self.__unbalance_weights_table[1] = np.power(1.0 / data_num, self.__paras.unbalance_weight_power)
-#        # '<Empty_Node>'
-#        self.__unbalance_weights_table[2] = 0
-#        
-#        # normalize
-#        weights_sum = 0.0
-#        for w in self.__unbalance_weights_table:
-#            weights_sum += w
-#        normalize = float(len(self.__unbalance_weights_table)) / weights_sum
-#        for i in range(len(self.__unbalance_weights_table)):
-#            self.__unbalance_weights_table[i] = self.__unbalance_weights_table[i] * normalize
+        ''' unbalance weights '''
+        self.__unbalance_class_weights_list = [np.zeros(len(self.__ast_nodes_vocabulary)),
+                                               np.zeros(len(self.__functions_name_vocabulary)),
+                                               np.zeros(len(self.__variables_name_vocabulary)),
+                                               np.zeros(len(self.__values_vocabulary))]
+        vocabulary_with_count_list = [ast_nodes_vocabulary_with_count, 
+                                      function_name_vocabulary_with_count, 
+                                      var_name_vocabulary_with_count, 
+                                      value_vocabulary_with_count]
+        vocabulary_list = [self.__ast_nodes_vocabulary,
+                           self.__functions_name_vocabulary,
+                           self.__variables_name_vocabulary,
+                           self.__values_vocabulary]
+        # 
+        min_count_softs = [min_count_soft_ast, min_count_soft_func, min_count_soft_var, min_count_soft_value]
+        for unbalance_class_weights, vocabulary_with_count, vocabulary, soft in zip(self.__unbalance_class_weights_list, vocabulary_with_count_list, vocabulary_list, min_count_softs):
+            words = list(vocabulary.keys())
+            class_num = len(vocabulary_with_count)
+            soft_weight = np.log(soft + 1.0) / np.log(class_num + 1.0) * class_num / soft
+            for i in range(class_num):
+                if (i < soft):
+                    weight = soft_weight
+                else:
+                    weight = (np.log(i + 2.0) - np.log(i + 1.0)) / np.log(class_num + 1.0) * class_num
+                word = vocabulary_with_count[i][0]
+                index = words.index(word)
+                unbalance_class_weights[index] = weight
     
     '''
     @return 'ast_node' / 'function_name' / 'variable_name' / 'value' 
@@ -573,10 +633,12 @@ class Generator:
         with open(path, 'w', encoding='utf-8') as f:
             f.write(json.dumps(self.__values_vocabulary, indent=1))
 
-#    def __write_unbalance_weights_table(self):
-#        path = self.__data_dir + Path.UNBALANCE_LOSS_WEIGHT_PATH
-#        with open(path, 'w', encoding='utf-8') as f:
-#            f.write(str(self.__unbalance_weights_table.tolist()))
+    def __write_unbalance_weights_table(self):
+        suffixes = ['_ast_nodes', '_functions', '_variables', '_values']
+        for suffix, unbalance_class_weights in zip(suffixes, self.__unbalance_class_weights_list):
+            path = self.__data_dir + Path.UNBALANCE_CLASS_WEIGHTS_PATH + suffix
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(str(unbalance_class_weights.tolist()))
         
     ''' write one(string) for read and one(ids) for model '''
     def __write_data(self, data, path):

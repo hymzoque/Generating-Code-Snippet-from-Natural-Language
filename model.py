@@ -28,7 +28,7 @@ class Model:
         # indexes of correct output
         self.correct_output = tf.placeholder(tf.float32, shape=[None, self.__paras.correct_predict_class_num])
 #        # unbalance weights table
-#        self.unbalance_weights_table = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, 1])
+        self.unbalance_class_weights = tf.placeholder(tf.float32, shape=[self.__paras.tree_node_num, 1])
         # keep_prob = 1 - dropout
         self.keep_prob = tf.placeholder(tf.float32)
         
@@ -169,14 +169,15 @@ class Model:
         '''        
 #        # unbalance weights 
 #        # [batch size]
-#        unbalance_weights = tf.reduce_max(tf.matmul(self.correct_output, self.unbalance_weights_table), axis=1)
+        unbalance_sample_weights = tf.reduce_max(tf.matmul(self.correct_output, self.unbalance_class_weights), axis=1)
         
         # [batch size]
         predict_result = tf.equal(tf.argmax(self.predicted_output, 1), tf.argmax(self.correct_output, 1))
         predict_result = tf.cast(predict_result, tf.float32)
         self.accuracy = tf.reduce_mean(predict_result)
         
-        batch_cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.correct_output, logits=logits)#, weights=unbalance_weights)
+#        batch_cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.correct_output, logits=logits)
+        batch_cross_entropy = tf.losses.softmax_cross_entropy(onehot_labels=self.correct_output, logits=logits, weights=unbalance_sample_weights)
         # weighted loss
         self.cross_entropy = tf.reduce_mean(batch_cross_entropy)
         self.optimize = tf.contrib.opt.AdamWOptimizer(weight_decay=self.__paras.weight_decay, learning_rate=self.__paras.learning_rate).minimize(self.cross_entropy)

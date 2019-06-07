@@ -17,7 +17,7 @@ class Path:
     VARIABLES_NAME_VOCABULARY_PATH = GENERATED_PATH + 'variables_vocabulary'
     VALUES_VOCABULARY_PATH = GENERATED_PATH + 'values_vocabulary'
     
-    UNBALANCE_LOSS_WEIGHT_PATH = GENERATED_PATH + 'unbalance_loss_weight'
+    UNBALANCE_CLASS_WEIGHTS_PATH = GENERATED_PATH + 'unbalance_class_weights'
     STATISTICS_PATH = GENERATED_PATH + 'statistics'
     
     PRE_TRAIN_DATA_PATH = GENERATED_PATH + 'pre_train_data'

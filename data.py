@@ -224,7 +224,7 @@ class Data:
                 self.get_valid_batches_values]
 #    @staticmethod
 #    def __read_unbalance_weights_table(paras):
-#        path = paras.dataset_path + Path.UNBALANCE_LOSS_WEIGHT_PATH
+#        path = paras.dataset_path + Path.UNBALANCE_CLASS_WEIGHTS_PATH
 #        with open(path, 'r', encoding='utf-8') as f:
 #            unbalance_weights_table = eval(f.read())
 #        for i in range(len(unbalance_weights_table)):
