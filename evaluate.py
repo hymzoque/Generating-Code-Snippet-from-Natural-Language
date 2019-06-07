@@ -105,7 +105,7 @@ class Evaluate:
             return
     
     def __read_predicted_code_train(self):
-        path = Path.get_prediction_path(self.__paras) + '_train'
+        path = Path.get_prediction_path(self.__paras) + '_train/'
         self.__predicted_code = []
         for i in range(len(self.__correct_code)):
             if os.path.exists(path + str(i)):
