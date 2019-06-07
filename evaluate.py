@@ -2,9 +2,9 @@
 """
 
 """
+import nltk
 import os
 
-import bleu_score
 from setting import Path
 from setting import tokenize
 
@@ -60,7 +60,7 @@ class Evaluate:
     def __evaluate(self):
         self.__bleus = []
         for i in range(len(self.__correct_code)):
-            self.__bleus.append(bleu_score.compute_bleu(
+            self.__bleus.append(nltk.translate.bleu_score.corpus_bleu(
                     reference_corpus=[[tokenize(self.__correct_code[i])]], 
                     translation_corpus=[tokenize(self.__predicted_code[i])])[0])
             
@@ -116,13 +116,7 @@ class Evaluate:
             else:
                 self.__predicted_code.append('null')    
     
-    
-    
-    
-    
-    
-    
-    
+
 if (__name__ == '__main__'):
     from setting import Parameters
     import sys
