@@ -244,4 +244,4 @@ class Data:
     
     def __read_unbalance_class_weights(self, path):
         with open(path, 'r', encoding='utf-8') as f:
-            return eval(f.read())
+            return [[i] for i in eval(f.read())]
