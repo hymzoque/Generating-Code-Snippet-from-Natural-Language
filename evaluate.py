@@ -65,8 +65,8 @@ class Evaluate:
         self.__bleus = []
         for i in range(len(self.__correct_code)):
             self.__bleus.append(nltk.translate.bleu_score.corpus_bleu(
-                    reference_corpus=[[tokenize(self.__correct_code[i])]], 
-                    translation_corpus=[tokenize(self.__predicted_code[i])])[0])
+                    [[tokenize(self.__correct_code[i])]], 
+                    [tokenize(self.__predicted_code[i])]))
             
         mean_bleu = sum(self.__bleus) / len(self.__bleus)
         
