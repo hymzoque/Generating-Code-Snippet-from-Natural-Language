@@ -4,7 +4,6 @@
 """
 import tensorflow as tf
 import numpy as np
-import math
 import os
 import re
 import datetime
@@ -46,9 +45,6 @@ class Predict:
         self.log = open('predict_log_' + Path.get_path_scope(self.__paras_base), mode='w')
         self.log.write(str(datetime.datetime.now()) + '\n')
         self.log.write('start predicting\n')
-        self.log = open('predict_log', mode='a')
-        self.log.write(str(datetime.datetime.now()) + '\n')
-        self.log.write('start predicting\n')
         self.log.write('dataset=' + str(self.__paras_base.dataset_path))
         self.log.write(', use_pre_train=' + str(self.__paras_base.use_pre_train))
         self.log.write(', use_semantic=' + str(self.__paras_base.use_semantic_logic_order) + '\n')
@@ -88,7 +84,7 @@ class Predict:
         ast_ = 0
 #        func_, var_, value_ = 1, 2, 3
         
-        begin_log_probability = -1
+        begin_log_probability = self.__paras_base.begin_log_probability
         
         # initialize the beam
         begin_unit = Predict.__Beam_Unit(description, ['ast.Module', '{'], begin_log_probability, 1, self.__tree_nodes_vocabulary)
@@ -142,7 +138,7 @@ class Predict:
                         # the 1st id is the end node
                         log_probability_of_end_node = unit_log_predicted_output[0]
                         # if end the log probability is
-                        temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras_base.short_sentence_penalty_power)
+                        temp = beam_unit.log_probability * np.power(beam_unit.predicted_nodes_num, self.__paras_base.short_sentence_penalty_power)
                         temp = temp + log_probability_of_end_node
                         
                         self.log.write('length : ' + str(beam_unit.predicted_nodes_num + 1) + ', log probability before penalty : ' + str(temp) + '\n')
@@ -154,7 +150,7 @@ class Predict:
                             self.log.write('unparse error:\n')
                             self.log.write(str(sys.exc_info()))
                         self.log.write('\n')
-                        end_log_probability = temp / math.pow(beam_unit.predicted_nodes_num + 1, self.__paras_base.short_sentence_penalty_power)
+                        end_log_probability = temp / np.power(beam_unit.predicted_nodes_num + 1, self.__paras_base.short_sentence_penalty_power)
                         # if better result appears, update the best result
                         if (end_log_probability > max_log_probability_result.log_probability):
                             max_log_probability_result = Predict.__Beam_Unit(description, unit_traceable_list[:], end_log_probability, beam_unit.predicted_nodes_num + 1, self.__tree_nodes_vocabulary)
@@ -197,9 +193,9 @@ class Predict:
                             # new nodes num
                             new_nodes_num = beam_unit.predicted_nodes_num + 1
                             # new probability
-                            temp = beam_unit.log_probability * math.pow(beam_unit.predicted_nodes_num, self.__paras_base.short_sentence_penalty_power)
+                            temp = beam_unit.log_probability * np.power(beam_unit.predicted_nodes_num, self.__paras_base.short_sentence_penalty_power)
                             temp = temp + each_probability
-                            new_probability = temp / math.pow(new_nodes_num, self.__paras_base.short_sentence_penalty_power)
+                            new_probability = temp / np.power(new_nodes_num, self.__paras_base.short_sentence_penalty_power)
                             
                             new_beam_unit = self.__Beam_Unit(description, new_traceable_list, new_probability, new_nodes_num, self.__tree_nodes_vocabulary)
                             new_beam.append(new_beam_unit)
@@ -218,6 +214,8 @@ class Predict:
             code = self.__traceable_list_to_code(max_log_probability_result.traceable_list)
             if (self.__paras_base.dataset_path == Path.HS_PATH):
                 code = self.__hs(code, description_str)
+            elif (self.__paras_base.dataset_path == Path.CONALA_PATH):
+                code = self.__conala(code, description_str)
             # write out
             with open(write_path, 'w', encoding='utf-8') as f:
                 f.write(code)
@@ -433,6 +431,11 @@ class Predict:
         name_1 = ''.join(n)
         code = re.sub('(?<=class )(.+?)(?=\()', name_1, code)
         code = re.sub('(?<=super\(\).__init__\(\')(.+?)(?=\')', name_2, code)
+        return code
+    
+    def __conala(self, code, description_str):
+        # todo
+        
         return code
     
     '''

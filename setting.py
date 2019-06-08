@@ -95,7 +95,8 @@ class Parameters_conala_base(Parameters_base):
         
     max_predict_time = 50 # avg 27 max 255 
     predict_beam_size = 5
-    unknwon_log_penalty = 2
+    begin_log_probability = -1
+    unknwon_log_penalty = 0.5
     short_sentence_penalty_power = 0.7
         
     dataset_path = Path.CONALA_PATH
@@ -132,6 +133,7 @@ class Parameters_hs_base(Parameters_base):
         
     max_predict_time = 220 # avg 143 max 723
     predict_beam_size = 5
+    begin_log_probability = -3
     unknwon_log_penalty = 0
     short_sentence_penalty_power = 0.7
         
