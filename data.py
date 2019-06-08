@@ -52,7 +52,7 @@ class Data:
             with open(path + str(i), 'r', encoding='utf-8') as f:
                 train_data.extend(eval(f.read()))
             i += 1
-        return self.__data_process(train_data, paras)
+        return self.__data_process(train_data, paras, with_noise=True)
         
     '''
     data form same with __train_data_process
@@ -97,7 +97,7 @@ class Data:
     ''' 
     fill 0 in spare place
     '''
-    def __data_process(self, data, paras):
+    def __data_process(self, data, paras, with_noise=False):
         data_num = len(data)
         d0 = np.zeros([data_num, paras.nl_len])
         d1 = np.zeros([data_num, paras.tree_len])
@@ -139,7 +139,17 @@ class Data:
             correct = data_point[6][0]
             d6[i][correct] = 1
         
-        return [d0, d1, d2, d3, d4, d5, d6]
+        if not with_noise:
+            return [d0, d1, d2, d3, d4, d5, d6]
+        else:
+            d5_noise = np.zeros([data_num, paras.semantic_units_len, paras.semantic_unit_children_num])
+            return [np.concatenate((d0, d0), axis=0),
+                    np.concatenate((d1, d1), axis=0), 
+                    np.concatenate((d2, d2), axis=0), 
+                    np.concatenate((d3, d3), axis=0), 
+                    np.concatenate((d4, d4), axis=0), 
+                    np.concatenate((d5, d5_noise), axis=0), 
+                    np.concatenate((d6, d6), axis=0)]
 
     
     

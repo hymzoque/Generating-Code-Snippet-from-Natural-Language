@@ -102,19 +102,19 @@ class Parameters_conala_base(Parameters_base):
         
     
 class Parameters_conala_ast_nodes(Parameters_conala_base):
-    train_times = 250
+    train_times = 100
     correct_predict_class_num = 83
 
 class Parameters_conala_functions(Parameters_conala_base):
-    train_times = 500
+    train_times = 200
     correct_predict_class_num = 313
 
 class Parameters_conala_variables(Parameters_conala_base):
-    train_times = 500
+    train_times = 200
     correct_predict_class_num = 309
 
 class Parameters_conala_values(Parameters_conala_base):
-    train_times = 500
+    train_times = 200
     correct_predict_class_num = 593
     
     
@@ -138,19 +138,19 @@ class Parameters_hs_base(Parameters_base):
     dataset_path = Path.HS_PATH
 
 class Parameters_hs_ast_nodes(Parameters_hs_base):
-    train_times = 150
+    train_times = 90
     correct_predict_class_num = 54
 
 class Parameters_hs_functions(Parameters_hs_base):
-    train_times = 400
+    train_times = 200
     correct_predict_class_num = 187
 
 class Parameters_hs_variables(Parameters_hs_base):
-    train_times = 400
+    train_times = 200
     correct_predict_class_num = 122
 
 class Parameters_hs_values(Parameters_hs_base):
-    train_times = 400
+    train_times = 200
     correct_predict_class_num = 256
     
 
