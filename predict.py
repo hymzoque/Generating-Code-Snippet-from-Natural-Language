@@ -149,6 +149,8 @@ class Predict:
                         except:
                             self.log.write('unparse error:\n')
                             self.log.write(str(sys.exc_info()))
+                            # if the code have something wrong, skip this beam_unit
+                            continue
                         self.log.write('\n')
                         end_log_probability = temp / np.power(beam_unit.predicted_nodes_num + 1, self.__paras_base.short_sentence_penalty_power)
                         # if better result appears, update the best result
@@ -302,7 +304,7 @@ class Predict:
                         new_instance += ', '
                 # ast.Set must have a list with at least 1 element, if it is empty, we fill in a stub
                 if ((next_node == 'ast.Set') and len(child_list[0]) == 0):
-                    new_instance += '[ast.Load()]'
+                    new_instance += '[ast.Str("unknwon")]'
                     
                 new_instance += ')'
                 new_node = eval(new_instance)
@@ -434,9 +436,44 @@ class Predict:
         return code
     
     def __conala(self, code, description_str):
-        # todo
         
-        return code
+        strs = []
+        temp_str = []
+        begin = False
+        for s in description_str:
+            if begin:
+                if s == '`':
+                    strs.append(' '.join(temp_str))
+                    begin = False
+                    temp_str = []
+                else:
+                    temp_str.append(s)
+            else:
+                if s == '`':
+                    begin = True
+                else:
+                    continue
+        
+        if len(strs) == 0:
+            return code
+        
+        root = ast.parse(code)
+        classes = {ast.Attribute:0, ast.Name:1, ast.ClassDef:2, ast.FunctionDef:3, ast.Str:4, ast.arg:5, ast.keyword:6}
+        attrs = ['attr', 'id', 'name', 'name', 's', 'arg', 'arg']
+        p = 0
+        for n in ast.walk(root):
+            if (n.__class__ in classes):
+                i = classes[n.__class__]
+                attr = attrs[i]
+                value = getattr(n, attr)
+                if value == 'unknwon':
+                    setattr(n, attr, strs[p])
+                    p += 1
+            
+            if p >= len(strs):
+                break
+        
+        return astunparse.unparse(root)
     
     '''
     Beam unit receive a traceable nodes list(which is same defined by class Generator)

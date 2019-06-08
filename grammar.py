@@ -96,7 +96,7 @@ class Grammar:
     def _ast_Compare(self, child, position):
         if ((position == 0 or position == 1) and not self.__is_list(child)):
             return False
-        # 
+        # can not handle this
         return True
     
     def _ast_arguments(self, child, position):
